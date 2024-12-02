@@ -4,102 +4,100 @@ layout: learn
 authors: flaviocopes, MylesBorins, LaRuaNa, jgb-solutions, amiller-gh, ahmadawais
 ---
 
-# An introduction to the npm package manager
+# npm 패키지 매니저 소개
 
-## Introduction to npm
+## npm 소개
 
-`npm` is the standard package manager for Node.js.
+`npm`은 Node.js의 기본 패키지 매니저입니다.
 
-In September 2022 over 2.1 million packages were reported being listed in the npm registry, making it the biggest single language code repository on Earth, and you can be sure there is a package for (almost!) everything.
+2022년 9월 기준으로 npm 레지스트리에 210만 개 이상의 패키지가 등록되어 있어, 거의 모든 용도의 패키지를 찾을 수 있습니다.
 
-It started as a way to download and manage dependencies of Node.js packages, but it has since become a tool used also in frontend JavaScript.
+처음에는 Node.js 패키지의 의존성을 다운로드하고 관리하기 위해 시작되었지만, 현재는 프론트엔드 JavaScript에서도 널리 사용되고 있습니다.
 
-> [**Yarn**](https://yarnpkg.com/en/) and [**pnpm**](https://pnpm.io) are alternatives to npm cli. You can check them out as well.
+> [**Yarn**](https://yarnpkg.com/en/)과 [**pnpm**](https://pnpm.io)은 npm CLI의 대안으로, 한번 사용해보세요.
 
-## Packages
+## 패키지
 
-`npm` installs, updates and manages downloads of dependencies of your project. Dependencies are pre-built pieces of code, such as libraries and packages, that your Node.js application needs to work.
+`npm`은 프로젝트의 종속성을 설치, 업데이트 및 관리합니다. 종속성은 라이브러리 및 패키지와 같은 사전 빌드된 코드이며, Node.js 애플리케이션이 작동하는 데 필요합니다.
 
-### Installing all dependencies
+### 모든 종속성 설치
 
-If a project has a `package.json` file, by running
+프로젝트에 `package.json` 파일이 있으면 다음 명령어를 실행하세요.
 
 ```bash
 npm install
 ```
 
-it will install everything the project needs, in the `node_modules` folder, creating it if it's not existing already.
+`node_modules` 폴더에 프로젝트에 `package.json` 파일에 나열된 모든 종속성을 설치하고, 해당 폴더가 존재하지 않으면 생성합니다.
 
-### Installing a single package
+### 단일 패키지 설치
 
-You can also install a specific package by running
+특정 패키지를 설치하려면 다음 명령어를 실행하세요.
 
 ```bash
 npm install <package-name>
 ```
 
-Furthermore, since npm 5, this command adds `<package-name>` to the `package.json` file _dependencies_. Before version 5, you needed to add the flag `--save`.
+npm 버전 5 이상에서는 이 명령어가 `<패키지-이름>`을 package.json 파일의 dependencies에 자동으로 추가합니다. 버전 5 이전에서는 `--save` 플래그를 사용해야 했습니다.
 
-Often you'll see more flags added to this command:
+자주 사용하는 플래그는 다음과 같습니다.
 
-- `--save-dev` installs and adds the entry to the `package.json` file _devDependencies_
-- `--no-save` installs but does not add the entry to the `package.json` file _dependencies_
-- `--save-optional` installs and adds the entry to the `package.json` file _optionalDependencies_
-- `--no-optional` will prevent optional dependencies from being installed
+- `--save-dev`: 패키지를 설치하고 package.json 파일의 *devDependencies*에 추가합니다.
+- `--no-save`: 패키지를 설치하지만 package.json 파일의 *dependencies*에 추가하지 않습니다.
+- `--save-optional`: 패키지를 설치하고 package.json 파일의 *optionalDependencies*에 추가합니다.
+- `--no-optional`: 선택적 종속성의 설치를 방지합니다.
 
-Shorthands of the flags can also be used:
+아래와 같이, 플래그의 축약형도 사용할 수 있습니다.
 
 - \-S: `--save`
 - \-D: `--save-dev`
 - \-O: `--save-optional`
 
-The difference between _devDependencies_ and _dependencies_ is that the former contains development tools, like a testing library, while the latter is bundled with the app in production.
+*devDependencies*와 *dependencies*의 차이점은 다음과 같습니다. *devDependencies*는 테스트 라이브러리와 같은 개발 도구를 포함하며, *dependencies*는 프로덕션에 번들로 포함됩니다.
 
-As for the _optionalDependencies_ the difference is that build failure of the dependency will not cause installation to fail. But it is your program's responsibility to handle the lack of the dependency. Read more about [optional dependencies](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#optionaldependencies).
+*optionalDependencies*의 차이점은 해당 종속성의 설치가 실패해도 전체 설치가 실패하지 않는다는 점입니다. 그러나 프로그램은 해당 종속성이 없을 때 이를 처리할 책임이 있습니다. [optional dependencies](https://docs.npmjs.com/cli/v7/configuring-npm/package-json#optionaldependencies)에 대해 자세히 읽어보세요.
 
-### Updating packages
+### 패키지 업데이트
 
-Updating is also made easy, by running
+패키지 업데이트도 간단하게 할 수 있습니다. 다음 명령어를 실행하세요.
 
 ```bash
 npm update
 ```
 
-`npm` will check all packages for a newer version that satisfies your versioning constraints.
+`npm`은 버전 제약 조건을 만족하는 새로운 버전을 모든 패키지에서 확인합니다.
 
-You can specify a single package to update as well:
+특정 패키지만 업데이트하려면 다음 명령어를 사용하세요.
 
 ```bash
 npm update <package-name>
 ```
 
-## Versioning
+## 버전 관리
 
-In addition to plain downloads, `npm` also manages **versioning**, so you can specify any specific version of a package, or require a version higher or lower than what you need.
+npm은 **버전 관리** 기능을 제공하여 패키지의 특정 버전을 지정하거나 원하는 범위의 버전을 설치할 수 있습니다.
 
-Many times you'll find that a library is only compatible with a major release of another library.
+많은 경우, 라이브러리의 주요 릴리스가 다른 라이브러리와 호환되지 않을 수 있습니다. 또한, 최신 릴리스에 아직 수정되지 않은 버그가 있을 수도 있습니다.
 
-Or a bug in the latest release of a lib, still unfixed, is causing an issue.
+특정 버전의 라이브러리를 지정하면 팀 전체가 동일한 버전을 사용하게 되어, package.json 파일이 업데이트될 때까지 모든 개발자가 동일한 환경에서 작업할 수 있습니다.
 
-Specifying an explicit version of a library also helps to keep everyone on the same exact version of a package, so that the whole team runs the same version until the `package.json` file is updated.
+이러한 상황에서 버전 관리는 매우 유용하며, npm은 의미 체계 버전 관리(semver) 표준을 따릅니다.
 
-In all those cases, versioning helps a lot, and `npm` follows the semantic versioning (semver) standard.
-
-You can install a specific version of a package, by running
+특정 버전의 패키지를 설치하려면 다음 명령어를 실행하세요.
 
 ```bash
 npm install <package-name>@<version>
 ```
 
-## Running Tasks
+## 작업 실행
 
-The package.json file supports a format for specifying command line tasks that can be run by using
+`package.json` 파일의 `scripts` 섹션을 활용하면 다양한 명령어 작업을 정의하고 실행할 수 있습니다. 다음과 같이 명령어를 실행하세요.
 
 ```bash
 npm run <task-name>
 ```
 
-For example:
+예를 들어, `package.json` 파일에 다음과 같이 스크립트를 정의할 수 있습니다.
 
 ```json
 {
@@ -110,7 +108,7 @@ For example:
 }
 ```
 
-It's very common to use this feature to run Webpack:
+웹팩(Webpack)을 사용하는 경우, 자주 사용하는 명령어를 스크립트로 정의할 수 있습니다.
 
 ```json
 {
@@ -122,7 +120,7 @@ It's very common to use this feature to run Webpack:
 }
 ```
 
-So instead of typing those long commands, which are easy to forget or mistype, you can run
+이렇게 스크립트를 정의해두면, 긴 명령어를 매번 입력할 필요 없이 간단하게 실행할 수 있습니다.
 
 ```console
 $ npm run watch
