@@ -5,6 +5,9 @@ authors: flaviocopes, MylesBorins, LaRuaNa, jgb-solutions, amiller-gh, ahmadawai
 ---
 
 # npm 패키지 매니저 소개
+> ❗️ *번역 날짜: 2024년 12월 2일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[An introduction to the npm package manager](https://nodejs.org/en/learn/getting-started/an-introduction-to-the-npm-package-manager)
 
 ## npm 소개
 
