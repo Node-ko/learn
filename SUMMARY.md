@@ -5,7 +5,7 @@
 * [How to install Node.js](docs/getting-started/how-to-install-nodejs.md)
 * [Node.js 를 사용하기 위해 알아야 할 JavaScript 지식은 어느정도일까?](docs/getting-started/how-much-javascript-do-you-need-to-know-to-use-nodejs.md)
 * [Differences between Node.js and the Browser](docs/getting-started/differences-between-nodejs-and-the-browser.md)
-* [The V8 JavaScript Engine](docs/getting-started/the-v8-javascript-engine.md)
+* [V8 JavaScript 엔진](docs/getting-started/the-v8-javascript-engine.md)
 * [An introduction to the npm package manager](docs/getting-started/an-introduction-to-the-npm-package-manager.md)
 * [ECMAScript 2015 (ES6) and beyond](docs/getting-started/ecmascript-2015-es6-and-beyond.md)
 * [Node.js the difference between development and production](docs/getting-started/nodejs-the-difference-between-development-and-production.md)
