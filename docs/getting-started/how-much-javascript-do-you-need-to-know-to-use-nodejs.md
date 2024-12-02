@@ -8,7 +8,7 @@ authors: flaviocopes, ollelauribostrom, MylesBorins, fhemberger, LaRuaNa, ahmada
 
 초보자로서 자신의 프로그래밍 실력에 충분한 자신감을 갖기까지는 어려움이 있습니다. 코딩을 배우는 과정에서 어디까지가 JavaScript이고 어디서부터가 Node.js인지, 또는 그 반대의 경우에 대해서 혼란스러울 수 있습니다.
 
-### Node.js 를 깊이있게 배우기 전에 알아두면 좋은 지식들.
+### Node.js 를 깊이있게 배우기 전에 알아두면 좋은 지식들
 
 - [어휘 문법](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar)
 - [표현식](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators)
