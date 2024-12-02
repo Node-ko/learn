@@ -5,6 +5,9 @@ authors: flaviocopes, smfoote, co16353sidak, MylesBorins, LaRuaNa, andys8, ahmad
 ---
 
 # V8 JavaScript 엔진
+> ❗️ *번역 날짜: 2024년 12월 2일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[The V8 JavaScript Engine](https://nodejs.org/en/learn/getting-started/the-v8-javascript-engine)
 
 V8은 Google Chrome에서 사용되는 JavaScript 엔진입니다. 이는 JavaScript 코드를 분석하고 실행하여 Chrome 브라우저에서 웹 페이지를 구동합니다.
 

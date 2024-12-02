@@ -5,6 +5,10 @@ authors: flaviocopes, ollelauribostrom, MylesBorins, fhemberger, LaRuaNa, ahmada
 ---
 
 # Node.js 를 사용하기 위해 알아야 할 JavaScript 지식은 어느정도일까?
+> ❗️ *번역 날짜: 2024년 12월 2일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[How much JavaScript do you need to know to use Node.js?](https://nodejs.org/en/learn/getting-started/how-much-javascript-do-you-need-to-know-to-use-nodejs)
+
 
 초보자로서 자신의 프로그래밍 실력에 충분한 자신감을 갖기까지는 어려움이 있습니다. 코딩을 배우는 과정에서 어디까지가 JavaScript이고 어디서부터가 Node.js인지, 또는 그 반대의 경우에 대해서 혼란스러울 수 있습니다.
 
