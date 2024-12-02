@@ -5,6 +5,9 @@ authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, RenanTKN, mc
 ---
 
 # Node.js에서 개발 환경과 프로덕션 환경의 차이
+> ❗️ *번역 날짜: 2024년 12월 2일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Node.js, the difference between development and production](https://nodejs.org/en/learn/getting-started/nodejs-the-difference-between-development-and-production)
 
 **Node.js 자체에는 개발 환경과 프로덕션 환경 간의 차이가 없습니다.** 즉, Node.js를 프로덕션 환경에서 실행하기 위해 특별한 설정을 적용할 필요가 없습니다.
 
