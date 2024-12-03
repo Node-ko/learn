@@ -1,10 +1,13 @@
 ---
-title: How to install Node.js
+title: Node.js 설치 방법
 layout: learn
 authors: flaviocopes, ZYSzys, ollelauribostrom, MylesBorins, fhemberger, LaRuaNa, ahmadawais, benhalverson, ovflowd
 ---
 
 # Node.js 설치 방법
+> ❗️ *번역 날짜: 2024년 12월 02일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+> [How to install Node.js](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
 
 Node.js는 다양한 방법으로 설치할 수 있습니다. 이 글에서는 가장 일반적이고 편리한 방법들을 소개합니다. 주요 플랫폼용 공식 패키지는 [https://nodejs.org/download/](/download)에서 다운로드할 수 있습니다.
 
