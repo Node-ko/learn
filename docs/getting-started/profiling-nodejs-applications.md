@@ -1,22 +1,18 @@
 ---
-title: Profiling Node.js Applications
+title: Node.js 애플리케이션 프로파일링
 layout: learn
 ---
 
-# Profiling Node.js Applications
+# Node.js 애플리케이션 프로파일링
+> ❗️ *번역 날짜: 2024년 12월 03일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+> [Profiling Node.js Applications](https://nodejs.org/en/learn/getting-started/profiling)
 
-Profiling a Node.js application involves measuring its performance by analyzing
-the CPU, memory, and other runtime metrics while the application is running.
-This helps in identifying bottlenecks, high CPU usage, memory leaks, or slow
-function calls that may impact the application's efficiency, responsiveness
-and scalability.
+Node.js 애플리케이션의 프로파일링은 애플리케이션 실행 중에 CPU, 메모리 및 기타 런타임 지표를 분석하여 성능을 측정하는 작업을 의미합니다. 이를 통해 애플리케이션의 효율성, 응답성, 확장성에 영향을 미칠 수 있는 병목 현상, 높은 CPU 사용률, 메모리 누수 또는 느린 함수 호출을 식별할 수 있습니다.
 
-There are many third party tools available for profiling Node.js applications
-but, in many cases, the easiest option is to use the Node.js built-in profiler.
-The built-in profiler uses the [profiler inside V8][] which samples the stack at
-regular intervals during program execution. It records the results of these
-samples, along with important optimization events such as jit compiles, as a
-series of ticks:
+Node.js 애플리케이션을 프로파일링하기 위한 서드파티 도구가 많이 있지만, 대부분의 경우 가장 간단한 방법은 Node.js의 내장 프로파일러를 사용하는 것입니다.
+내장 프로파일러는 [V8 내부의 프로파일러][]를 사용하며, 프로그램 실행 중 일정한 간격으로 스택을 샘플링합니다.
+이 샘플링 결과와 JIT 컴파일과 같은 중요한 최적화 이벤트를 **틱(ticks)** 의 형태로 기록합니다:
 
 ```
 code-creation,LazyCompile,0,0x2d5000a337a0,396,"bp native array.js:1153:16",0x289f644df68,~
@@ -26,15 +22,12 @@ code-creation,Stub,2,0x2d5000a33d40,182,"DoubleToIStub"
 code-creation,Stub,2,0x2d5000a33e00,507,"NumberToStringStub"
 ```
 
-In the past, you needed the V8 source code to be able to interpret the ticks.
-Luckily, tools have been introduced since Node.js 4.4.0 that facilitate the
-consumption of this information without separately building V8 from source.
-Let's see how the built-in profiler can help provide insight into application
-performance.
+과거에는 **틱(ticks)** 을 해석하기 위해 V8 소스 코드를 별도로 사용해야 했습니다.
+다행히도, Node.js 4.4.0 이후부터는 이러한 정보를 활용하기 위해 V8을 소스 코드에서 빌드하지 않아도 되는 도구들이 도입되었습니다.
+이제 내장 프로파일러가 애플리케이션 성능에 대한 통찰을 제공하는 데 어떻게 도움이 되는지 알아보겠습니다.
 
-To illustrate the use of the tick profiler, we will work with a simple Express
-application. Our application will have two handlers, one for adding new users to
-our system:
+틱 프로파일러의 사용법을 설명하기 위해 간단한 Express 애플리케이션을 사용해 보겠습니다.
+이 애플리케이션은 두 개의 핸들러를 가지며, 그 중 하나는 시스템에 새로운 사용자를 추가하는 역할을 합니다:
 
 ```js
 app.get('/newUser', (req, res) => {
@@ -56,7 +49,7 @@ app.get('/newUser', (req, res) => {
 });
 ```
 
-and another for validating user authentication attempts:
+또 다른 하나는 사용자 인증 시도를 검증하는 역할을 합니다:
 
 ```js
 app.get('/auth', (req, res) => {
@@ -80,26 +73,25 @@ app.get('/auth', (req, res) => {
 });
 ```
 
-_Please note that these are NOT recommended handlers for authenticating users in
-your Node.js applications and are used purely for illustration purposes. You
-should not be trying to design your own cryptographic authentication mechanisms
-in general. It is much better to use existing, proven authentication solutions._
+_이 핸들러들은 Node.js 애플리케이션에서 사용자를 인증하기 위한 권장 핸들러가 아님을 유의하세요.
+이 핸들러들은 단순히 설명을 위해 사용되는 예제일 뿐입니다.
+일반적으로 직접 암호화 인증 메커니즘을 설계하려고 하지 않는 것이 좋습니다. 대신 기존의 검증된 인증 솔루션을 사용하는 것이 훨씬 안전합니다._
 
-Now assume that we've deployed our application and users are complaining about
-high latency on requests. We can easily run the app with the built-in profiler:
+이제 애플리케이션을 배포했다고 가정해 보겠습니다. 사용자들이 요청 시 높은 지연(latency)이 발생한다고 불만을 제기하고 있습니다.
+내장 프로파일러를 사용하면 애플리케이션을 쉽게 실행하여 문제를 분석할 수 있습니다:
 
 ```
 NODE_ENV=production node --prof app.js
 ```
 
-and put some load on the server using `ab` (ApacheBench):
+그리고 `ab` (ApacheBench)를 사용하여 서버에 부하를 가해봅니다:
 
 ```
 curl -X GET "http://localhost:8080/newUser?username=matt&password=password"
 ab -k -c 20 -n 250 "http://localhost:8080/auth?username=matt&password=password"
 ```
 
-and get an ab output of:
+그리고 다음과 같은 ab 출력 결과를 얻습니다:
 
 ```
 Concurrency Level:      20
@@ -128,27 +120,21 @@ Percentage of the requests served within a certain time (ms)
  100%   4225 (longest request)
 ```
 
-From this output, we see that we're only managing to serve about 5 requests per
-second and that the average request takes just under 4 seconds round trip. In a
-real-world example, we could be doing lots of work in many functions on behalf
-of a user request but even in our simple example, time could be lost compiling
-regular expressions, generating random salts, generating unique hashes from user
-passwords, or inside the Express framework itself.
+이 출력 결과에서 우리는 초당 약 5개의 요청만 처리할 수 있으며, 요청 하나를 처리하는 데 평균적으로 약 4초가 소요된다는 것을 알 수 있습니다.
+실제 사례에서는 사용자 요청을 처리하기 위해 많은 함수에서 다양한 작업을 수행하겠지만, 심지어 이 간단한 예제에서도 시간을 소모할 수 있는 부분은 많습니다.
+예를 들어, 정규식을 컴파일하거나, 랜덤 솔트를 생성하거나, 사용자 비밀번호로부터 고유한 해시를 생성하거나, Express 프레임워크 내부에서 발생하는 작업들이 그 예입니다.
 
-Since we ran our application using the `--prof` option, a tick file was generated
-in the same directory as your local run of the application. It should have the
-form `isolate-0xnnnnnnnnnnnn-v8.log` (where `n` is a digit).
+`--prof` 옵션을 사용하여 애플리케이션을 실행했기 때문에, 애플리케이션을 로컬에서 실행한 디렉터리에 **틱 파일(tick file)** 이 생성되었습니다. 이 파일의 이름은 `isolate-0xnnnnnnnnnnnn-v8.log` 형식을 따르며, 여기서 `n`은 숫자를 나타냅니다.
 
-In order to make sense of this file, we need to use the tick processor bundled
-with the Node.js binary. To run the processor, use the `--prof-process` flag:
+이 파일을 해석하려면 Node.js 바이너리에 포함된 **틱 프로세서(tick processor)** 를 사용해야 합니다. 틱 프로세서를 실행하려면 `--prof-process` 플래그를 사용합니다:
 
 ```
 node --prof-process isolate-0xnnnnnnnnnnnn-v8.log > processed.txt
 ```
 
-Opening processed.txt in your favorite text editor will give you a few different
-types of information. The file is broken up into sections which are again broken
-up by language. First, we look at the summary section and see:
+processed.txt 파일을 당신이 선호하는 텍스트 편집기로 열면 다양한 유형의 정보를 확인할 수 있습니다.
+이 파일은 여러 섹션으로 나뉘어 있으며, 각 섹션은 언어별로 다시 구분됩니다.
+먼저, 요약 섹션(summary section)을 살펴보면 다음과 같은 내용을 확인할 수 있습니다:
 
 ```
  [Summary]:
@@ -160,11 +146,7 @@ up by language. First, we look at the summary section and see:
     215    0.6%          Unaccounted
 ```
 
-This tells us that 97% of all samples gathered occurred in C++ code and that
-when viewing other sections of the processed output we should pay most attention
-to work being done in C++ (as opposed to JavaScript). With this in mind, we next
-find the \[C++\] section which contains information about which C++ functions are
-taking the most CPU time and see:
+이는 수집된 샘플의 97%가 C++ 코드에서 발생했음을 의미하며, 처리된 출력의 다른 섹션을 볼 때, JavaScript보다 C++에서 수행되는 작업에 더 많은 주의를 기울여야 한다는 것을 알려줍니다. 이를 염두에 두고, 다음으로 \[C++\] 섹션을 찾아  C++ 함수 중에서 어떤 함수가 가장 많은 CPU 시간을 소비하고 있는지 확인합니다:
 
 ```
  [C++]:
@@ -174,15 +156,9 @@ taking the most CPU time and see:
    3165    8.4%    8.6%  _malloc_zone_malloc
 ```
 
-We see that the top 3 entries account for 72.1% of CPU time taken by the
-program. From this output, we immediately see that at least 51.8% of CPU time is
-taken up by a function called PBKDF2 which corresponds to our hash generation
-from a user's password. However, it may not be immediately obvious how the lower
-two entries factor into our application (or if it is we will pretend otherwise
-for the sake of example). To better understand the relationship between these
-functions, we will next look at the \[Bottom up (heavy) profile\] section which
-provides information about the primary callers of each function. Examining this
-section, we find:
+이 출력에서 상위 3개의 항목이 프로그램의 CPU 사용 시간 중 72.1%를 차지한다는 것을 알 수 있습니다. 특히, 사용자 비밀번호로부터 해시를 생성하는 함수인 PBKDF2가 전체 CPU 시간의 최소 51.8%를 소비하고 있다는 것을 바로 확인할 수 있습니다. 그러나 나머지 두 항목이 애플리케이션에서 어떤 방식으로 연관되어 있는지는 즉시 명확하지 않을 수 있습니다(또는 예제 설명을 위해 그렇지 않다고 가정하겠습니다). 
+이 함수들 간의 관계를 더 잘 이해하기 위해, 각 함수의 주요 호출자를 보여주는 \[Bottom up (heavy) profile\] 섹션을 살펴보겠습니다.
+이 섹션을 검사한 결과, 다음과 같은 내용을 확인합니다:
 
 ```
    ticks parent  name
@@ -199,29 +175,16 @@ section, we find:
    3161  100.0%      LazyCompile: *exports.pbkdf2Sync crypto.js:552:30
 ```
 
-Parsing this section takes a little more work than the raw tick counts above.
-Within each of the "call stacks" above, the percentage in the parent column
-tells you the percentage of samples for which the function in the row above was
-called by the function in the current row. For example, in the middle "call
-stack" above for \_sha1_block_data_order, we see that `_sha1_block_data_order` occurred
-in 11.9% of samples, which we knew from the raw counts above. However, here, we
-can also tell that it was always called by the pbkdf2 function inside the
-Node.js crypto module. We see that similarly, `_malloc_zone_malloc` was called
-almost exclusively by the same pbkdf2 function. Thus, using the information in
-this view, we can tell that our hash computation from the user's password
-accounts not only for the 51.8% from above but also for all CPU time in the top
-3 most sampled functions since the calls to `_sha1_block_data_order` and
-`_malloc_zone_malloc` were made on behalf of the pbkdf2 function.
+이 섹션을 해석하는 것은 위의 원시 틱(raw tick) 수를 해석하는 것보다 조금 더 많은 작업이 필요합니다.
+위의 각 “call stacks”에서, 부모 열(parent column)에 표시된 퍼센트 값은 현재 행의 함수가 바로 위 행의 함수에 의해 호출된 샘플의 비율을 나타냅니다. 예를 들어, 중간 "call
+stack" 에서 \_sha1_block_data_order의 경우, `_sha1_block_data_order`가 샘플의 11.9%에서 발생했음을 보여줍니다. 이는 위에서 확인한 원시 틱 수와 일치합니다. 그러나 여기에서는 _sha1_block_data_order가 항상 Node.js crypto 모듈 내부의 pbkdf2 함수에 의해 호출되었다는 것도 알 수 있습니다. 마찬가지로, `_malloc_zone_malloc` 또한 거의 예외 없이 동일한 pbkdf2 함수에 의해 호출되었음을 확인할 수 있습니다. 따라서, 이 뷰에서 얻은 정보를 통해 사용자 비밀번호로부터 해시를 계산하는 작업이 단순히 위에서 언급한 51.8%만 차지하는 것이 아니라, 샘플링된 상위 3개 함수의 모든 CPU 시간도 포함하고 있음을 알 수 있습니다. 이는 `_sha1_block_data_order`와
+`_malloc_zone_malloc` 호출이 모두 pbkdf2 함수를 대신하여 수행되었기 때문입니다.
 
-At this point, it is very clear that the password-based hash generation should
-be the target of our optimization. Thankfully, you've fully internalized the
-[benefits of asynchronous programming][] and you realize that the work to
-generate a hash from the user's password is being done in a synchronous way and
-thus tying down the event loop. This prevents us from working on other incoming
-requests while computing a hash.
+이 시점에서, 비밀번호 기반 해시 생성이 최적화의 대상이 되어야 한다는 것이 매우 명확합니다.
+다행히도, 당신은 [비동기 프로그래밍의 이점][]을 충분히 이해하고 있으며, 사용자의 비밀번호로 해시를 생성하는 작업이 동기 방식으로 수행되고 있어 이벤트 루프를 차단하고 있다는 사실을 깨닫습니다.
+이로 인해 해시를 계산하는 동안 다른 들어오는 요청을 처리할 수 없게 됩니다.
 
-To remedy this issue, you make a small modification to the above handlers to use
-the asynchronous version of the pbkdf2 function:
+이 문제를 해결하기 위해, 위 핸들러를 약간 수정하여 pbkdf2 함수의 비동기 버전을 사용하도록 변경합니다:
 
 ```js
 app.get('/auth', (req, res) => {
@@ -251,8 +214,7 @@ app.get('/auth', (req, res) => {
 });
 ```
 
-A new run of the ab benchmark above with the asynchronous version of your app
-yields:
+애플리케이션의 비동기 버전으로 변경한 후, 위에서 사용한 ab 벤치마크를 다시 실행하면 다음과 같은 결과가 나타납니다:
 
 ```
 Concurrency Level:      20
@@ -281,16 +243,13 @@ Percentage of the requests served within a certain time (ms)
  100%   1079 (longest request)
 ```
 
-Yay! Your app is now serving about 20 requests per second, roughly 4 times more
-than it was with the synchronous hash generation. Additionally, the average
-latency is down from the 4 seconds before to just over 1 second.
+야호! 이제 애플리케이션이 초당 약 20개의 요청을 처리하고 있으며, 이는 동기 해시 생성 방식일 때보다 약 4배 증가한 수치입니다.
+게다가 평균 지연 시간(latency)도 이전의 4초에서 약 1초로 크게 줄어들었습니다.
 
-Hopefully, through the performance investigation of this (admittedly contrived)
-example, you've seen how the V8 tick processor can help you gain a better
-understanding of the performance of your Node.js applications.
+이 (다소 인위적인) 예제를 통해 성능 조사를 진행하면서 V8 틱 프로세서가 Node.js 애플리케이션의 성능을 더 잘 이해하는 데 얼마나 유용한 도구인지를 확인하셨기를 바랍니다.
 
-You may also find [how to create a flame graph][diagnostics flamegraph] helpful.
+[플레임 그래프(flame graph)를 생성하는 방법][진단용 플레임 그래프]도 유용할 수 있습니다.
 
-[profiler inside V8]: https://v8.dev/docs/profile
-[benefits of asynchronous programming]: https://nodesource.com/blog/why-asynchronous
-[diagnostics flamegraph]: /learn/diagnostics/flame-graphs
+[V8 내부의 프로파일러]: https://v8.dev/docs/profile
+[비동기 프로그래밍의 이점]: https://nodesource.com/blog/why-asynchronous
+[진단용 플레임 그래프]: /learn/diagnostics/flame-graphs
