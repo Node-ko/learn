@@ -13,7 +13,7 @@
 - [Node.js와 WebAssembly](docs/getting-started/nodejs-with-webassembly.md)
 - [Node.js 디버깅](docs/getting-started/debugging-nodejs.md)
 - [Node.js 애플리케이션 프로파일링](docs/getting-started/profiling-nodejs-applications.md)
-- [Security Best Practices](docs/getting-started/security-best-practices.md)
+- [보안 모범 사례](docs/getting-started/security-best-practices.md)
 
 ## TypeScript
 
