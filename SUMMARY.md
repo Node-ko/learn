@@ -10,7 +10,7 @@
 - [npm 패키지 매니저 소개](docs/getting-started/an-introduction-to-the-npm-package-manager.md)
 - [ECMAScript 2015(ES6) 및 그 너머](docs/getting-started/ecmascript-2015-es6-and-beyond.md)
 - [Node.js에서 개발 환경과 프로덕션 환경의 차이](docs/getting-started/nodejs-the-difference-between-development-and-production.md)
-- [Node.js with WebAssembly](docs/getting-started/nodejs-with-webassembly.md)
+- [Node.js와 WebAssembly](docs/getting-started/nodejs-with-webassembly.md)
 - [Debugging Node.js](docs/getting-started/debugging-nodejs.md)
 - [Node.js 애플리케이션 프로파일링](docs/getting-started/profiling-nodejs-applications.md)
 - [Security Best Practices](docs/getting-started/security-best-practices.md)
