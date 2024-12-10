@@ -47,8 +47,7 @@ import net from 'node:net';
 
 const server = net.createServer(function (socket) {
   // socket.on('error', console.error) // 이것이 서버 충돌을 방지합니다
-  socket.write('Echo server
-');
+  socket.write('Echo server');
   socket.pipe(socket);
 });
 
