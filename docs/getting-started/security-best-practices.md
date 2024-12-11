@@ -1,55 +1,41 @@
 ---
-title: Security Best Practices
+title: 보안 모범 사례
 layout: learn
 authors: RafaelGSS, UlisesGascon, fraxken, facutuesca, mhdawson, arhart, naugtur, anonrig
 ---
 
-# Security Best Practices
+# 보안 모범 사례
 
-## Intent
+> ❗️ _번역 날짜: 2024년 12월 09일_ <br>
+> 공식 문서 원문은 아래를 참고하세요.<br> > [Security Best Practices](https://nodejs.org/en/learn/getting-started/security-best-practices)
 
-This document intends to extend the current [threat model][] and provide extensive
-guidelines on how to secure a Node.js application.
+## 의도
 
-## Document Content
+이 문서는 현재 [위협 모델][threat model]을 확장하고 Node.js 애플리케이션을 보호하는 방법에 대한 광범위한 지침을 제공합니다.
 
-- Best practices: A simplified condensed way to see the best practices. We can
-  use [this issue][security guidance issue] or [this guideline][nodejs guideline]
-  as the starting point. It is important to note that this document is specific
-  to Node.js, if you are looking for something broad, consider
-  [OSSF Best Practices][].
-- Attacks explained: illustrate and document in plain English with some code
-  examples (if possible) of the attacks that we are mentioning in the threat model.
-- Third-Party Libraries: define threats
-  (typosquatting attacks, malicious packages...) and best practices regarding
-  node modules dependencies, etc...
+## 문서 내용
 
-## Threat List
+- 모범 사례: 모범 사례를 간단하게 요약하여 보여줍니다. [해당 이슈][security guidance issue]나 [해당 지침][nodejs guideline]을 시작점으로 사용할 수 있습니다. 이 문서는 Node.js에 특정한 내용임을 유의해야 하며, 보다 포괄적인 내용을 원한다면 [OSSF 모범 사례][OSSF Best Practices]를 고려하세요.
+- 공격 설명: 위협 모델에서 언급된 공격을 평이한 영어로 설명하고, 가능하다면 일부 코드 예제와 함께 문서화합니다.
+- 서드파티 라이브러리: 위협(타이포스쿼팅 공격, 악성 패키지 등)을 정의하고 Node.js 모듈 종속성 관련 모범 사례를 제공합니다.
 
-### Denial of Service of HTTP server (CWE-400)
+## 위협 목록
 
-This is an attack where the application becomes unavailable for the purpose it
-was designed due to the way it processes incoming HTTP requests. These requests
-need not be deliberately crafted by a malicious actor: a misconfigured or buggy
-client can also send a pattern of requests to the server that result in a denial
-of service.
+### HTTP 서버 서비스 거부(CWE-400)
 
-HTTP requests are received by the Node.js HTTP server and handed over to the
-application code via the registered request handler. The server does not parse
-the content of the request body. Therefore any DoS caused by the contents of the
-body after they are handed over to the request handler is not a vulnerability in
-Node.js itself, since it's the responsibility of the application code to handle
-it correctly.
+이 공격은 애플리케이션이 들어오는 HTTP 요청을 처리하는 방식으로 인해 설계된 목적으로 사용할 수 없게 되는 경우입니다. 이 요청은 악의적인 행위자가 의도적으로 제작하지 않아도, 잘못 구성되었거나 결함이 있는 클라이언트가 서버에 특정 패턴의 요청을 보내서 서비스 거부를 일으킬 수 있습니다.
 
-Ensure that the WebServer handles socket errors properly, for instance, when a
-server is created without an error handler, it will be vulnerable to DoS
+HTTP 요청은 Node.js HTTP 서버에서 수신되며 등록된 요청 핸들러를 통해 애플리케이션 코드에 전달됩니다. 서버는 요청 본문의 내용을 구문 분석하지 않습니다. 따라서 요청 본문 내용으로 인해 발생하는 서비스 거부는 Node.js 자체의 취약점이 아니며, 이는 애플리케이션 코드가 올바르게 처리해야 할 책임입니다.
+
+웹 서버가 소켓 오류를 적절히 처리하도록 설정해야 합니다. 예를 들어, 서버를 오류 핸들러 없이 생성하면 서비스 거부에 취약해질 수 있습니다.
 
 ```cjs
 const net = require('node:net');
 
 const server = net.createServer(function (socket) {
-  // socket.on('error', console.error) // this prevents the server to crash
-  socket.write('Echo server\r\n');
+  // socket.on('error', console.error) // 이것이 서버 충돌을 방지합니다
+  socket.write('Echo server
+');
   socket.pipe(socket);
 });
 
@@ -60,267 +46,179 @@ server.listen(5000, '0.0.0.0');
 import net from 'node:net';
 
 const server = net.createServer(function (socket) {
-  // socket.on('error', console.error) // this prevents the server to crash
-  socket.write('Echo server\r\n');
+  // socket.on('error', console.error) // 이것이 서버 충돌을 방지합니다
+  socket.write('Echo server');
   socket.pipe(socket);
 });
 
 server.listen(5000, '0.0.0.0');
 ```
 
-If a _bad request_ is performed the server could crash.
+잘못된 요청(_bad request_)이 수행되면 서버가 충돌할 수 있습니다.
 
-An example of a DoS attack that is not caused by the request's contents is
-[Slowloris][]. In this attack, HTTP requests are sent slowly and fragmented,
-one fragment at a time. Until the full request is delivered, the server will
-keep resources dedicated to the ongoing request. If enough of these requests
-are sent at the same time, the amount of concurrent connections will soon reach
-its maximum resulting in a denial of service. This is how the attack depends
-not on the request's contents but on the timing and pattern of the requests
-being sent to the server.
+내용이 아닌 방식으로 발생하는 서비스 거부 공격의 예로는 [Slowloris][]가 있습니다. 이 공격에서는 HTTP 요청이 느리고 단편적으로 전송되며, 한 번에 한 조각씩 전달됩니다. 요청이 완전히 전달될 때까지 서버는 진행 중인 요청에 전용 리소스를 유지합니다. 이러한 요청이 충분히 동시에 전송되면 동시 연결의 최대치를 초과하여 서비스 거부가 발생합니다. 이 공격은 요청 내용이 아니라 요청의 타이밍 및 패턴에 따라 달라집니다.
 
-**Mitigations**
+**완화 방안**
 
-- Use a reverse proxy to receive and forward requests to the Node.js application.
-  Reverse proxies can provide caching, load balancing, IP blacklisting, etc. which
-  reduce the probability of a DoS attack being effective.
-- Correctly configure the server timeouts, so that connections that are idle or
-  where requests are arriving too slowly can be dropped. See the different timeouts
-  in [`http.Server`][], particularly `headersTimeout`, `requestTimeout`, `timeout`,
-  and `keepAliveTimeout`.
-- Limit the number of open sockets per host and in total. See the [http docs][],
-  particularly `agent.maxSockets`, `agent.maxTotalSockets`, `agent.maxFreeSockets`
-  and `server.maxRequestsPerSocket`.
+- 요청을 수신하고 Node.js 애플리케이션으로 전달하는 리버스 프록시를 사용합니다. 리버스 프록시는 캐싱, 로드 밸런싱, IP 차단 등의 기능을 제공하여 서비스 거부 공격의 효과를 줄일 수 있습니다.
+- 서버 시간 초과를 올바르게 구성하여 유휴 상태의 연결이나 요청이 너무 느리게 도착하는 연결을 중단할 수 있도록 합니다. [`http.Server`][`http.Server`]의 `headersTimeout`, `requestTimeout`, `timeout`, `keepAliveTimeout`과 같은 다양한 시간 초과 설정을 참조하세요.
+- 호스트별 및 전체 열려 있는 소켓 수를 제한합니다. [http 문서][http docs]에서 `agent.maxSockets`, `agent.maxTotalSockets`, `agent.maxFreeSockets`, `server.maxRequestsPerSocket`을 참조하세요.
 
-### DNS Rebinding (CWE-346)
+### DNS 재바인딩(CWE-346)
 
-This is an attack that can target Node.js applications being run with the
-debugging inspector enabled using the [--inspect switch][].
+이 공격은 [--inspect 스위치][--inspect switch]를 사용하여 디버깅 인스펙터가 활성화된 Node.js 애플리케이션을 대상으로 할 수 있습니다.
 
-Since websites opened in a web browser can make WebSocket and HTTP requests,
-they can target the debugging inspector running locally.
-This is usually prevented by the [same-origin policy][] implemented by modern
-browsers, which forbids scripts from reaching resources from different origins
-(meaning a malicious website cannot read data requested from a local IP address).
+웹 브라우저에서 열린 웹사이트는 WebSocket 및 HTTP 요청을 생성할 수 있으므로 로컬에서 실행 중인 디버깅 인스펙터를 대상으로 할 수 있습니다. 이는 일반적으로 최신 브라우저에서 구현된 [동일 출처 정책][same-origin policy]에 의해 방지됩니다. 동일 출처 정책은 악성 웹사이트가 로컬 IP 주소에서 요청된 데이터를 읽지 못하도록 차단합니다.
 
-However, through DNS rebinding, an attacker can temporarily control the origin
-for their requests so that they seem to originate from a local IP address.
-This is done by controlling both a website and the DNS server used to resolve
-its IP address. See [DNS Rebinding wiki][] for more details.
+그러나 DNS 재바인딩을 통해 공격자는 요청이 로컬 IP 주소에서 시작된 것처럼 보이도록 출처를 임시로 제어할 수 있습니다. 이를 위해 웹사이트와 해당 IP 주소를 해석하는 DNS 서버를 모두 제어합니다. 자세한 내용은 [DNS Rebinding 위키][DNS Rebinding wiki]를 참조하세요.
 
-**Mitigations**
+**완화 방안**
 
-- Disable inspector on _SIGUSR1_ signal by attaching a `process.on(‘SIGUSR1’, …)`
-  listener to it.
-- Do not run the inspector protocol in production.
+- `process.on('SIGUSR1', ...)` 리스너를 연결하여 _SIGUSR1_ 신호에서 인스펙터를 비활성화합니다.
+- 프로덕션 환경에서 인스펙터 프로토콜을 실행하지 마십시오.
 
-### Exposure of Sensitive Information to an Unauthorized Actor (CWE-552)
+### 민감 정보 노출(CWE-552)
 
-All the files and folders included in the current directory are pushed to the
-npm registry during the package publication.
+현재 디렉토리에 포함된 모든 파일과 폴더는 패키지 게시 중 npm 레지스트리에 푸시됩니다.
 
-There are some mechanisms to control this behavior by defining a blocklist with
-`.npmignore` and `.gitignore` or by defining an allowlist in the `package.json`
+`.npmignore` 및 `.gitignore`를 사용하여 차단 목록을 정의하거나 `package.json`에서 허용 목록을 정의하여 이 동작을 제어할 수 있습니다.
 
-**Mitigations**
+**완화 방안**
 
-- Using `npm publish --dry-run` to list all the files to publish. Ensure to review the
-  content before publishing the package.
-- It’s also important to create and maintain ignore files such as `.gitignore` and
-  `.npmignore`.
-  Throughout these files, you can specify which files/folders should not be published.
-  The [files property][] in `package.json` allows the inverse operation
-  -- allowed list.
-- In case of an exposure, make sure to [unpublish the package][].
+- `npm publish --dry-run`을 사용하여 게시할 파일 목록을 확인합니다. 패키지 게시 전에 콘텐츠를 검토하십시오.
+- `.gitignore` 및 `.npmignore`와 같은 무시(ignore) 파일을 작성하고 유지 관리하는 것도 중요합니다. 이러한 파일을 통해 게시하지 말아야 할 파일/폴더를 지정할 수 있습니다. `package.json`의 [files 속성][files property]을 사용하면 반대로 허용 목록을 정의할 수 있습니다.
+- 노출이 발생한 경우, [패키지 게시 취소][unpublish the package]를 수행하십시오.
 
-### HTTP Request Smuggling (CWE-444)
+### HTTP 요청 스머글링(CWE-444)
 
-This is an attack that involves two HTTP servers (usually a proxy and a Node.js
-application). A client sends an HTTP request that goes first through the
-front-end server (the proxy) and then is redirected to the back-end server (the application).
-When the front-end and back-end interpret ambiguous HTTP requests differently,
-there is potential for an attacker to send a malicious message that won't be
-seen by the front-end but will be seen by the back-end, effectively "smuggling"
-it past the proxy server.
+이 공격은 두 HTTP 서버(일반적으로 프록시와 Node.js 애플리케이션)를 포함합니다. 클라이언트는 프론트엔드 서버(프록시)를 거쳐 백엔드 서버(애플리케이션)로 리디렉션되는 HTTP 요청을 보냅니다. 프론트엔드와 백엔드가 모호한 HTTP 요청을 다르게 해석하면, 공격자는 프론트엔드에서 보이지 않지만 백엔드에서 보이는 악성 메시지를 보낼 수 있습니다. 이는 사실상 프록시 서버를 "우회"하여 전달됩니다.
 
-See the [CWE-444][] for a more detailed description and examples.
+[CWE-444][]에서 더 상세한 설명과 예제를 확인할 수 있습니다.
 
-Since this attack depends on Node.js interpreting HTTP requests
-differently from an (arbitrary) HTTP server, a successful attack can be due to
-a vulnerability in Node.js, the front-end server, or both.
-If the way the request is interpreted by Node.js is consistent with the
-HTTP specification (see [RFC7230][]), then it is not considered a vulnerability
-in Node.js.
+이 공격은 Node.js가 HTTP 요청을 다른 HTTP 서버와 다르게 해석하는 경우에 의존하므로, 성공적인 공격은 Node.js, 프론트엔드 서버 또는 둘 모두의 취약성 때문일 수 있습니다. 요청이 HTTP 명세서(예: [RFC7230][])와 일치하도록 Node.js에서 해석된다면 이는 Node.js의 취약성으로 간주되지 않습니다.
 
-**Mitigations**
+**완화 방안**
 
-- Do not use the `insecureHTTPParser` option when creating a HTTP Server.
-- Configure the front-end server to normalize ambiguous requests.
-- Continuously monitor for new HTTP request smuggling vulnerabilities in both
-  Node.js and the front-end server of choice.
-- Use HTTP/2 end to end and disable HTTP downgrading if possible.
+- HTTP 서버를 생성할 때 `insecureHTTPParser` 옵션을 사용하지 마십시오.
+- 프론트엔드 서버를 구성하여 모호한 요청을 정규화합니다.
+- Node.js 및 선택한 프론트엔드 서버의 새로운 HTTP 요청 스머글링 취약성을 지속적으로 모니터링합니다.
+- 가능하면 HTTP/2를 끝단까지 사용하고 HTTP 다운그레이드를 비활성화하십시오.
 
-### Information Exposure through Timing Attacks (CWE-208)
+### 타이밍 공격을 통한 정보 노출(CWE-208)
 
-This is an attack that allows the attacker to learn potentially sensitive information by, for example, measuring how long
-it takes for the application to respond to a request. This attack is not specific to Node.js and can target almost all runtimes.
+이 공격은 애플리케이션이 요청에 응답하는 데 걸리는 시간을 측정하여 민감한 정보를 알아내는 공격입니다. 이 공격은 Node.js에 국한되지 않고 거의 모든 런타임을 대상으로 할 수 있습니다.
 
-The attack is possible whenever the application uses a secret in a timing-sensitive operation (e.g., branch). Consider handling authentication in a typical application. Here, a basic authentication method includes email and password as credentials.
-User information is retrieved from the input the user has supplied from ideally a
-DBMS.
-Upon retrieving user information, the password is compared with the user
-information retrieved from the database. Using the built-in string comparison takes a longer
-time for the same-length values.
-This comparison, when run for an acceptable amount unwillingly increases the
-response time of the request. By comparing the request response times, an
-attacker can guess the length and the value of the password in a large quantity
-of requests.
+타이밍 공격은 애플리케이션이 시크릿을 타이밍 민감한 작업(예: 분기)에서 사용하는 경우 가능합니다. 예를 들어, 애플리케이션에서 인증을 처리할 때 이메일과 비밀번호를 자격 증명으로 사용하는 기본 인증 방법이 있습니다. 이때 데이터베이스(DBMS)에서 사용자 정보를 검색하고 내장된 문자열 비교 기능을 사용하여 응답 시간이 길어질 수 있습니다. 이를 통해 공격자는 비밀번호의 길이와 값을 추측할 수 있습니다.
 
-**Mitigations**
+**완화 방안**
 
-- The crypto API exposes a function `timingSafeEqual` to compare actual and
-  expected sensitive values using a constant-time algorithm.
-- For password comparison, you can use the [scrypt][] available also on the
-  native crypto module.
+- Crypto API는 `timingSafeEqual` 함수를 노출하여 실제 값과 예상 민감 값을 상수 시간 알고리즘으로 비교할 수 있습니다.
+- 비밀번호 비교의 경우, 기본 crypto 모듈에서 사용할 수 있는 [scrypt][]를 활용하십시오.
+- 더 일반적으로, 변수 시간 작업에서 시크릿 사용을 피하십시오. 여기에는 시크릿으로 분기하거나, 공격자가 동일한 인프라(예: 동일한 클라우드 머신)에서 위치할 수 있는 경우 메모리에서 시크릿을 인덱스로 사용하는 것도 포함됩니다. JavaScript에서 상수 시간 코드를 작성하는 것은 어렵습니다(JIT 때문). 암호화 애플리케이션의 경우, 기본 crypto API 또는 WebAssembly(네이티브에서 구현되지 않은 알고리즘)를 사용하십시오.
 
-- More generally, avoid using secrets in variable-time operations. This includes branching on secrets and, when the attacker could be co-located on the same infrastructure (e.g., same cloud machine), using a secret as an index into memory. Writing constant-time code in JavaScript is hard (partly because of the JIT). For crypto applications, use the built-in crypto APIs or WebAssembly (for algorithms not implemented in natively).
+### 악성 서드파티 모듈(CWE-1357)
 
-### Malicious Third-Party Modules (CWE-1357)
+현재 Node.js에서는 모든 패키지가 네트워크 접근과 같은 강력한 리소스에 접근할 수 있습니다.
+게다가, 파일 시스템에 접근할 수 있으므로 데이터를 어디든 보낼 수 있습니다.
 
-Currently, in Node.js, any package can access powerful resources such as
-network access.
-Furthermore, because they also have access to the file system, they can send
-any data anywhere.
+Node 프로세스에서 실행되는 모든 코드는 `eval()`(또는 그와 동등한 기능)을 사용하여 추가 임의 코드를 로드하고 실행할 수 있습니다.
+파일 시스템 쓰기 권한이 있는 모든 코드도 로드된 새 파일이나 기존 파일을 작성하여 동일한 작업을 수행할 수 있습니다.
 
-All code running into a node process has the ability to load and run additional
-arbitrary code by using `eval()`(or its equivalents).
-All code with file system write access may achieve the same thing by writing to
-new or existing files that are loaded.
+Node.js는 로드된 리소스를 신뢰할 수 없는 상태로 또는 신뢰할 수 있는 상태로 선언할 수 있는 실험적인[¹][experimental-features]
+[정책 메커니즘][policy mechanism]을 제공합니다. 하지만, 이 정책은 기본적으로 활성화되어 있지 않습니다.
+종속성 버전을 고정하고 일반적인 워크플로 또는 npm 스크립트를 사용하여 자동 취약성 검사를 실행하세요.
+패키지를 설치하기 전에, 해당 패키지가 유지 관리되고 있으며 예상했던 모든 콘텐츠를 포함하는지 확인하세요.
+주의해야 할 점은 GitHub 소스 코드가 항상 게시된 코드와 동일하지 않을 수 있으므로 *node_modules*에서 이를 확인해야 합니다.
 
-Node.js has an experimental[¹][experimental-features]
-[policy mechanism][] to declare the loaded resource as untrusted or trusted.
-However, this policy is not enabled by default.
-Be sure to pin dependency versions and run automatic checks for vulnerabilities
-using common workflows or npm scripts.
-Before installing a package make sure that this package is maintained and
-includes all the content you expected.
-Be careful, the GitHub source code is not always the same as the published one,
-validate it in the _node_modules_.
+#### 공급망 공격
 
-#### Supply chain attacks
+Node.js 애플리케이션에 대한 공급망 공격은 종속성(직접 또는 전이적) 중 하나가 손상되었을 때 발생합니다.
+이는 종속성 명세에 대한 너무 느슨한 정의(원하지 않는 업데이트 허용) 또는 명세의 일반적인 오타([타이포스쿼팅][typosquatting] 취약점)를 통해 발생할 수 있습니다.
 
-A supply chain attack on a Node.js application happens when one of its
-dependencies (either direct or transitive) are compromised.
-This can happen either due to the application being too lax on the specification
-of the dependencies (allowing for unwanted updates) and/or common typos in the
-specification (vulnerable to [typosquatting][]).
+상위 패키지에 대한 제어권을 가진 공격자는 악성 코드를 포함한 새 버전을 게시할 수 있습니다.
+Node.js 애플리케이션이 안전한 버전을 엄격히 지정하지 않고 해당 패키지를 의존한다면, 패키지가 최신 악성 버전으로 자동 업데이트되어 애플리케이션이 손상될 수 있습니다.
 
-An attacker who takes control of an upstream package can publish a new version
-with malicious code in it. If a Node.js application depends on that package
-without being strict on which version is safe to use, the package can be
-automatically updated to the latest malicious version, compromising the application.
+`package.json` 파일에 지정된 종속성은 정확한 버전 번호 또는 범위를 가질 수 있습니다.
+그러나 종속성을 정확한 버전에 고정하더라도 전이적 종속성 자체는 고정되지 않습니다.
+이는 여전히 원치 않는/예상치 못한 업데이트에 애플리케이션이 취약하다는 것을 의미합니다.
 
-Dependencies specified in the `package.json` file can have an exact version number
-or a range. However, when pinning a dependency to an exact version, its
-transitive dependencies are not themselves pinned.
-This still leaves the application vulnerable to unwanted/unexpected updates.
+가능한 공격 벡터:
 
-Possible attack vectors:
+- 타이포스쿼팅 공격
+- Lockfile 중독
+- 손상된 유지보수자
+- 악성 패키지
+- 종속성 혼동
 
-- Typosquatting attacks
-- Lockfile poisoning
-- Compromised maintainers
-- Malicious Packages
-- Dependency Confusions
+**완화 방안**
 
-**Mitigations**
+- `--ignore-scripts` 옵션을 사용하여 npm이 임의의 스크립트를 실행하지 못하도록 방지합니다.
+  - 또한, `npm config set ignore-scripts true`를 사용하여 전역적으로 비활성화할 수 있습니다.
+- 종속성 버전을 범위나 변경 가능한 소스에서 가져오는 버전이 아닌 특정 변경 불가능한 버전으로 고정합니다.
+- 모든 종속성(직접 및 전이적)을 고정하는 lockfile을 사용합니다.
+  - [Lockfile 중독 완화][Mitigations for lockfile poisoning]를 참고하세요.
+- CI를 사용하여 [`npm-audit`][]와 같은 도구로 새 취약성을 자동으로 확인합니다.
+  - [`Socket`][]와 같은 도구를 사용하여 정적 분석으로 네트워크 또는 파일 시스템 접근과 같은 위험한 동작을 찾을 수 있습니다.
+- `npm install` 대신 [`npm ci`][]를 사용합니다.
+  이는 _package.json_ 대신 lockfile을 무시하는 대신 lockfile과 _package.json_ 파일 간의 불일치가 오류를 발생시킵니다.
+- _package.json_ 파일에서 종속성 이름에 오류/오타가 있는지 신중히 확인하세요.
 
-- Prevent npm from executing arbitrary scripts with `--ignore-scripts`
-  - Additionally, you can disable it globally with `npm config set ignore-scripts true`
-- Pin dependency versions to a specific immutable version,
-  not a version that is a range or from a mutable source.
-- Use lockfiles, which pin every dependency (direct and transitive).
-  - Use [Mitigations for lockfile poisoning][].
-- Automate checks for new vulnerabilities using CI, with tools like [`npm-audit`][].
-  - Tools such as [`Socket`][] can be used to analyze packages with static analysis
-    to find risky behaviors such as network or filesystem access.
-- Use [`npm ci`][] instead of `npm install`.
-  This enforces the lockfile so that inconsistencies between it and the
-  _package.json_ file causes an error (instead of silently ignoring the lockfile
-  in favor of _package.json_).
-- Carefully check the _package.json_ file for errors/typos in the names of the
-  dependencies.
+### 메모리 접근 위반(CWE-284)
 
-### Memory Access Violation (CWE-284)
+메모리 기반 또는 힙 기반 공격은 메모리 관리 오류와 악용 가능한 메모리 할당기의 조합에 의존합니다.
+모든 런타임과 마찬가지로, 프로젝트가 공유 머신에서 실행되는 경우 Node.js도 이러한 공격에 취약합니다.
+보안 힙을 사용하면 포인터 초과 및 언더런으로 인해 민감한 정보가 유출되는 것을 방지하는 데 유용합니다.
 
-Memory-based or heap-based attacks depend on a combination of memory management
-errors and an exploitable memory allocator.
-Like all runtimes, Node.js is vulnerable to these attacks if your projects run
-on a shared machine.
-Using a secure heap is useful for preventing sensitive information from leaking
-due to pointer overruns and underruns.
+안타깝게도, 보안 힙은 Windows에서 사용할 수 없습니다.
+Node.js [보안 힙 문서][secure-heap documentation]에서 더 많은 정보를 확인할 수 있습니다.
 
-Unfortunately, a secure heap is not available on Windows.
-More information can be found on Node.js [secure-heap documentation][].
+**완화 방안**
 
-**Mitigations**
+- 애플리케이션에 따라 `--secure-heap=n`을 사용하며, *n*은 할당된 최대 바이트 크기입니다.
+- 프로덕션 앱을 공유 머신에서 실행하지 마십시오.
 
-- Use `--secure-heap=n` depending on your application where _n_ is the allocated
-  maximum byte size.
-- Do not run your production app on a shared machine.
+### 원숭이 패치(Monkey Patching) (CWE-349)
 
-### Monkey Patching (CWE-349)
-
-Monkey patching refers to the modification of properties in runtime aiming to
-change the existing behavior. Example:
+원숭이 패치는 실행 중에 속성을 수정하여 기존 동작을 변경하려는 것을 말합니다. 예시:
 
 ```js
 // eslint-disable-next-line no-extend-native
 Array.prototype.push = function (item) {
-  // overriding the global [].push
+  // 글로벌 [].push 동작을 재정의
 };
 ```
 
-**Mitigations**
+**완화 방안**
 
-The `--frozen-intrinsics` flag enables experimental[¹][experimental-features]
-frozen intrinsics, which means all the built-in JavaScript objects and functions
-are recursively frozen.
-Therefore, the following snippet **will not** override the default behavior of
-`Array.prototype.push`
+`--frozen-intrinsics` 플래그는 모든 기본 JavaScript 객체와 함수를 재귀적으로 동결하는 실험적인[¹][experimental-features] 플래그를 활성화합니다.
+따라서, 다음 코드 스니펫은 `Array.prototype.push`의 기본 동작을 재정의할 수 **없습니다**.
 
 ```js
 // eslint-disable-next-line no-extend-native
 Array.prototype.push = function (item) {
-  // overriding the global [].push
+  // 글로벌 [].push 동작을 재정의
 };
 
-// Uncaught:
+// 에러 발생:
 // TypeError <Object <Object <[Object: null prototype] {}>>>:
 // Cannot assign to read only property 'push' of object ''
 ```
 
-However, it’s important to mention you can still define new globals and replace
-existing globals using `globalThis`
+하지만, `globalThis`를 사용하여 여전히 새로운 글로벌 변수를 정의하고 기존 글로벌 변수를 교체할 수 있음을 언급하는 것이 중요합니다.
 
 ```console
-> globalThis.foo = 3; foo; // you can still define new globals
+> globalThis.foo = 3; foo; // 새로운 글로벌 변수를 정의 가능
 3
-> globalThis.Array = 4; Array; // However, you can also replace existing globals
+> globalThis.Array = 4; Array; // 그러나 기존 글로벌 변수를 교체할 수도 있음
 4
 ```
 
-Therefore, `Object.freeze(globalThis)` can be used to guarantee no globals will
-be replaced.
+따라서, `Object.freeze(globalThis)`를 사용하여 어떤 글로벌 변수도 교체되지 않도록 보장할 수 있습니다.
 
-### Prototype Pollution Attacks (CWE-1321)
+### 프로토타입 오염 공격 (CWE-1321)
 
-Prototype pollution refers to the possibility of modifying or injecting properties
-into Javascript language items by abusing the usage of \_\_proto\__,
-\_constructor_, _prototype_, and other properties inherited from built-in
-prototypes.
-
-<!-- eslint-skip -->
+프로토타입 오염은 \_\_proto\__, \_constructor_, \_prototype\_ 및 기본 프로토타입에서 상속된 기타 속성의 사용을 악용하여
+JavaScript 언어 항목에 속성을 수정하거나 삽입할 수 있는 가능성을 나타냅니다.
 
 ```js
 const a = { a: 1, b: 2 };
@@ -329,53 +227,48 @@ const data = JSON.parse('{"__proto__": { "polluted": true}}');
 const c = Object.assign({}, a, data);
 console.log(c.polluted); // true
 
-// Potential DoS
+// 잠재적인 DoS
 const data2 = JSON.parse('{"__proto__": null}');
 const d = Object.assign(a, data2);
 d.hasOwnProperty('b'); // Uncaught TypeError: d.hasOwnProperty is not a function
 ```
 
-This is a potential vulnerability inherited from the JavaScript
-language.
+이것은 JavaScript 언어에서 유래된 잠재적인 취약점입니다.
 
-**Examples**:
+**예시**:
 
 - [CVE-2022-21824][] (Node.js)
-- [CVE-2018-3721][] (3rd Party library: Lodash)
+- [CVE-2018-3721][] (서드파티 라이브러리: Lodash)
 
-**Mitigations**
+**완화 방안**
 
-- Avoid [insecure recursive merges][], see [CVE-2018-16487][].
-- Implement JSON Schema validations for external/untrusted requests.
-- Create Objects without prototype by using `Object.create(null)`.
-- Freezing the prototype: `Object.freeze(MyObject.prototype)`.
-- Disable the `Object.prototype.__proto__` property using `--disable-proto` flag.
-- Check that the property exists directly on the object, not from the prototype
-  using `Object.hasOwn(obj, keyFromObj)`.
-- Avoid using methods from `Object.prototype`.
+- [안전하지 않은 재귀 병합][insecure recursive merges]을 피하세요. [CVE-2018-16487][] 참조.
+- 외부/신뢰할 수 없는 요청에 대해 JSON 스키마 검증을 구현하세요.
+- `Object.create(null)`을 사용하여 프로토타입이 없는 객체를 생성하세요.
+- 프로토타입을 동결합니다: `Object.freeze(MyObject.prototype)`.
+- `--disable-proto` 플래그를 사용하여 `Object.prototype.__proto__` 속성을 비활성화하세요.
+- 속성이 프로토타입이 아닌 객체에 직접 존재하는지 `Object.hasOwn(obj, keyFromObj)`를 사용하여 확인하세요.
+- `Object.prototype`에서 메서드를 사용하는 것을 피하세요.
 
-### Uncontrolled Search Path Element (CWE-427)
+### 통제되지 않은 검색 경로 요소 (CWE-427)
 
-Node.js loads modules following the [Module Resolution Algorithm][].
-Therefore, it assumes the directory in which a module is requested
-(require) is trusted.
+Node.js는 [모듈 해석 알고리즘][Module Resolution Algorithm]을 따라 모듈을 로드합니다.
+따라서, 요청된(require) 모듈의 디렉터리는 신뢰할 수 있다고 가정합니다.
 
-By that, it means the following application behavior is expected.
-Assuming the following directory structure:
+이는 다음과 같은 애플리케이션 동작이 예상된다는 것을 의미합니다.
+다음 디렉터리 구조를 가정합니다:
 
 - _app/_
   - _server.js_
   - _auth.js_
   - _auth_
 
-If server.js uses `require('./auth')` it will follow the module resolution
-algorithm and load _auth_ instead of _auth.js_.
+server.js가 `require('./auth')`를 사용하면 모듈 해석 알고리즘을 따라 _auth.js_ 대신 *auth*를 로드합니다.
 
-**Mitigations**
+**완화 방안**
 
-Using the experimental[¹][experimental-features]
-[policy mechanism with integrity checking][] can avoid the above threat.
-For the directory described above, one can use the following `policy.json`
+실험적인[¹][experimental-features] [정책 메커니즘과 무결성 확인][policy mechanism with integrity checking]을 사용하면 위의 위협을 방지할 수 있습니다.
+위의 디렉터리에 대해, 다음과 같은 `policy.json`을 사용할 수 있습니다:
 
 ```json
 {
@@ -393,8 +286,7 @@ For the directory described above, one can use the following `policy.json`
 }
 ```
 
-Therefore, when requiring the _auth_ module, the system will validate the
-integrity and throw an error if doesn’t match the expected one.
+따라서, _auth_ 모듈을 요청할 때 시스템은 무결성을 확인하고 예상과 일치하지 않으면 오류를 발생시킵니다.
 
 ```console
 » node --experimental-policy=policy.json app/server.js
@@ -417,20 +309,20 @@ SyntaxError [ERR_SRI_PARSE]: Subresource Integrity string "sha256-iuGZ6SFVFpMuHU
 }
 ```
 
-Note, it's always recommended the use of `--policy-integrity` to avoid policy mutations.
+참고로, 정책 변조를 방지하기 위해 항상 `--policy-integrity`를 사용하는 것이 좋습니다.
 
-## Experimental Features in Production
+## 프로덕션 환경에서의 실험적 기능
 
-The use of experimental features in production isn't recommended.
-Experimental features can suffer breaking changes if needed, and their
-functionality isn't securely stable. Although, feedback is highly appreciated.
+프로덕션 환경에서 실험적 기능을 사용하는 것은 권장되지 않습니다.
+실험적 기능은 필요에 따라 중대한 변경 사항을 겪을 수 있으며, 그 기능이 안정적으로 보장되지 않습니다.
+그러나 피드백은 매우 환영합니다.
 
-## OpenSSF Tools
+## OpenSSF 도구
 
-The [OpenSSF][] is leading several initiatives that can be very useful, especially if you plan to publish an npm package. These initiatives include:
+[OpenSSF][]는 특히 npm 패키지를 게시할 계획이 있는 경우 매우 유용한 여러 이니셔티브를 주도하고 있습니다. 이러한 이니셔티브는 다음을 포함합니다:
 
-- [OpenSSF Scorecard][] Scorecard evaluates open source projects using a series of automated security risk checks. You can use it to proactively assess vulnerabilities and dependencies in your code base and make informed decisions about accepting vulnerabilities.
-- [OpenSSF Best Practices Badge Program][] Projects can voluntarily self-certify by describing how they comply with each best practice. This will generate a badge that can be added to the project.
+- [OpenSSF Scorecard][]: Scorecard는 일련의 자동화된 보안 위험 검사를 사용하여 오픈 소스 프로젝트를 평가합니다. 이를 통해 코드베이스의 취약성과 종속성을 사전 평가하고, 취약성을 수락할지에 대한 정보를 바탕으로 결정을 내릴 수 있습니다.
+- [OpenSSF Best Practices Badge Program][]: 프로젝트는 각 모범 사례를 준수하는 방법을 설명하여 자발적으로 자가 인증할 수 있습니다. 이를 통해 프로젝트에 추가할 수 있는 배지가 생성됩니다.
 
 [threat model]: https://github.com/nodejs/node/security/policy#the-nodejs-threat-model
 [security guidance issue]: https://github.com/nodejs/security-wg/issues/488

@@ -1,30 +1,35 @@
 ---
-title: Introduction to Node.js
+title: Node.js 소개
 layout: learn
 authors: flaviocopes, potch, MylesBorins, RomainLanz, virkt25, Trott, onel0p3z, ollelauribostrom, MarkPieszak, fhemberger, LaRuaNa, FrozenPandaz, mcollina, amiller-gh, ahmadawais, saqibameen, dangen-effy, aymen94, benhalverson
 ---
 
-# Introduction to Node.js
+# Node.js 소개
 
-Node.js is an open-source and cross-platform JavaScript runtime environment. It is a popular tool for almost any kind of project!
+> ❗️ _번역 날짜: 2024년 12월 09일_ <br>
+> 공식 문서 원문은 아래를 참고하세요.<br> > [Introduction to Node.js](https://nodejs.org/en/learn/getting-started/introduction-to-nodejs)
 
-Node.js runs the V8 JavaScript engine, the core of Google Chrome, outside of the browser. This allows Node.js to be very performant.
+Node.js는 오픈 소스이자 크로스 플랫폼 JavaScript 런타임 환경입니다. 다양한 프로젝트에서 사용할 수 있는 인기 있는 도구입니다!
 
-A Node.js app runs in a single process, without creating a new thread for every request. Node.js provides a set of asynchronous I/O primitives in its standard library that prevent JavaScript code from blocking and generally, libraries in Node.js are written using non-blocking paradigms, making blocking behavior the exception rather than the norm.
+Node.js는 Google Chrome의 핵심인 V8 JavaScript 엔진을 브라우저 외부에서 실행합니다. 이를 통해 Node.js는 매우 뛰어난 성능을 발휘합니다.
 
-When Node.js performs an I/O operation, like reading from the network, accessing a database or the filesystem, instead of blocking the thread and wasting CPU cycles waiting, Node.js will resume the operations when the response comes back.
+Node.js 애플리케이션은 단일 프로세스에서 실행되며, 요청마다 새로운 스레드를 생성하지 않습니다. Node.js는 표준 라이브러리에서 비동기 I/O 기본 요소를 제공하여 JavaScript 코드가 차단되는 것을 방지합니다. 일반적으로 Node.js의 라이브러리는 비차단 패러다임으로 작성되어 있으며, 차단 동작은 예외적인 경우에만 발생합니다.
 
-This allows Node.js to handle thousands of concurrent connections with a single server without introducing the burden of managing thread concurrency, which could be a significant source of bugs.
+Node.js가 네트워크 읽기, 데이터베이스 액세스, 파일 시스템 접근과 같은 I/O 작업을 수행할 때 스레드를 차단하고 CPU 사이클을 낭비하며 대기하는 대신, 응답이 반환되면 작업을 재개합니다.
 
-Node.js has a unique advantage because millions of frontend developers that write JavaScript for the browser are now able to write the server-side code in addition to the client-side code without the need to learn a completely different language.
+이러한 구조 덕분에 Node.js는 스레드 동시성을 관리할 필요 없이 단일 서버에서 수천 개의 동시 연결을 처리할 수 있습니다. 스레드 동시성 관리는 종종 많은 버그의 원인이 될 수 있습니다.
 
-In Node.js the new ECMAScript standards can be used without problems, as you don't have to wait for all your users to update their browsers - you are in charge of deciding which ECMAScript version to use by changing the Node.js version, and you can also enable specific experimental features by running Node.js with flags.
+또한 Node.js는 브라우저에서 JavaScript를 작성하던 수백만 명의 프론트엔드 개발자가 클라이언트 측 코드뿐만 아니라 서버 측 코드도 작성할 수 있도록 해주는 독특한 장점이 있습니다. 이를 위해 완전히 새로운 언어를 배울 필요가 없습니다.
 
-## An Example Node.js Application
+Node.js에서는 새로운 ECMAScript 표준을 문제없이 사용할 수 있습니다. 모든 사용자가 브라우저를 업데이트하기를 기다릴 필요가 없기 때문입니다. Node.js 버전을 변경하거나 특정 실험적 기능을 플래그로 활성화하여 사용할 ECMAScript 버전을 결정할 수 있습니다.
 
-The most common example Hello World of Node.js is a web server:
+## Node.js 애플리케이션 예제
 
-```cjs
+Node.js의 가장 간단한 예제는 웹 서버입니다:
+
+#### CommonJS 방식 (cjs)
+
+```javascript
 const { createServer } = require('node:http');
 
 const hostname = '127.0.0.1';
@@ -41,7 +46,9 @@ server.listen(port, hostname, () => {
 });
 ```
 
-```mjs
+#### ES 모듈 방식 (mjs)
+
+```javascript
 import { createServer } from 'node:http';
 
 const hostname = '127.0.0.1';
@@ -58,41 +65,40 @@ server.listen(port, hostname, () => {
 });
 ```
 
-To run this snippet, save it as a `server.js` file and run `node server.js` in your terminal.
-If you use mjs version of the code, you should save it as a `server.mjs` file and run `node server.mjs` in your terminal.
+위 코드를 실행하려면 파일을 `server.js`로 저장한 후 터미널에서 `node server.js`를 실행하십시오. ES 모듈 방식 코드를 사용하는 경우, 파일을 `server.mjs`로 저장하고 `node server.mjs`를 실행해야 합니다.
 
-This code first includes the Node.js [`http` module](https://nodejs.org/api/http.html).
+이 코드는 Node.js의 [`http` 모듈](https://nodejs.org/api/http.html)을 먼저 포함합니다.
 
-Node.js has a fantastic [standard library](https://nodejs.org/api/), including first-class support for networking.
+Node.js는 네트워킹에 대한 일류 지원을 포함하여 환상적인 [표준 라이브러리](https://nodejs.org/api/)를 제공합니다.
 
-The `createServer()` method of `http` creates a new HTTP server and returns it.
+`http`의 `createServer()` 메서드는 새로운 HTTP 서버를 생성하여 반환합니다.
 
-The server is set to listen on the specified port and host name. When the server is ready, the callback function is called, in this case informing us that the server is running.
+서버는 지정된 포트와 호스트 이름에서 수신 대기하도록 설정됩니다. 서버가 준비되면 콜백 함수가 호출되어 서버가 실행 중임을 알려줍니다.
 
-Whenever a new request is received, the [`request` event](https://nodejs.org/api/http.html#http_event_request) is called, providing two objects: a request (an [`http.IncomingMessage`](https://nodejs.org/api/http.html#http_class_http_incomingmessage) object) and a response (an [`http.ServerResponse`](https://nodejs.org/api/http.html#http_class_http_serverresponse) object).
+새 요청이 수신될 때마다 [`request` 이벤트](https://nodejs.org/api/http.html#http_event_request)가 호출되며, 두 개의 객체가 제공됩니다: 요청 객체([`http.IncomingMessage`](https://nodejs.org/api/http.html#http_class_http_incomingmessage))와 응답 객체([`http.ServerResponse`](https://nodejs.org/api/http.html#http_class_http_serverresponse))입니다.
 
-Those 2 objects are essential to handle the HTTP call.
+이 두 객체는 HTTP 호출을 처리하는 데 필수적입니다.
 
-The first provides the request details. In this simple example, this is not used, but you could access the request headers and request data.
+첫 번째 객체는 요청 세부 정보를 제공합니다. 이 간단한 예제에서는 사용하지 않지만, 요청 헤더와 요청 데이터를 액세스할 수 있습니다.
 
-The second is used to return data to the caller.
+두 번째 객체는 호출자에게 데이터를 반환하는 데 사용됩니다.
 
-In this case with:
+다음 코드를 통해:
 
-```js
+```javascript
 res.statusCode = 200;
 ```
 
-we set the statusCode property to 200, to indicate a successful response.
+응답 상태 코드를 200으로 설정하여 성공적인 응답임을 나타냅니다.
 
-We set the Content-Type header:
+Content-Type 헤더를 설정합니다:
 
-```js
+```javascript
 res.setHeader('Content-Type', 'text/plain');
 ```
 
-and we close the response, adding the content as an argument to `end()`:
+그리고 `end()`에 콘텐츠를 인수로 추가하여 응답을 종료합니다:
 
-```js
+```javascript
 res.end('Hello World\n');
 ```
