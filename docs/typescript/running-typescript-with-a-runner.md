@@ -6,8 +6,8 @@ authors: AugustinMauroy
 
 # runner를 사용하여 TypeScript 실행하기
 
-> ❗️ _번역 날짜: 2024년 12월 17일_ <br>
-> 공식 문서 원문은 아래를 참고하세요.<br> > [Running TypeScript with a runnery](https://nodejs.org/en/learn/typescript/run#running-typescript-with-a-runner)
+> ❗️ _번역 날짜: 2024년 12월 17일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [Running TypeScript with a runner](https://nodejs.org/en/learn/typescript/run#running-typescript-with-a-runner)
 
 이전 글에서는 **트랜스파일링** (**transpilation**)을 사용해 TypeScript 코드를 실행하는 방법을 알아봤습니다. 이번 글에서는 어떻게 runner를 사용하여 TypeScript 코드를 실행하는지 배워보겠습니다.
 

@@ -1,18 +1,21 @@
 ---
-title: The Node.js Event emitter
+title: Node.js의 Event emitter
 layout: learn
 authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, ovflowd
 ---
 
+> ❗️ _번역 날짜: 2024년 12월 17일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [The Node.js Event emitter](https://nodejs.org/en/learn/asynchronous-work/the-nodejs-event-emitter#the-nodejs-event-emitter)
+
 # The Node.js Event emitter
 
-If you worked with JavaScript in the browser, you know how much of the interaction of the user is handled through events: mouse clicks, keyboard button presses, reacting to mouse movements, and so on.
+브라우저에서 JavaScript를 사용해 봤다면, 마우스 클릭, 키보드 버튼 입력, 마우스 움직임에 반응하기 등 정말 많은 상호작용이 이벤트를 통해 처리된다는 것을 알고 있을 것입니다.
 
-On the backend side, Node.js offers us the option to build a similar system using the [`events` module](https://nodejs.org/api/events.html).
+백엔드에서는 Node.js가 [`events` module](https://nodejs.org/api/events.html) 을 통해 유사한 시스템을 구축할 수 있는 옵션을 제공합니다.
 
-This module, in particular, offers the `EventEmitter` class, which we'll use to handle our events.
+이 모듈에서 특히 중요한 것은 이벤트를 처리하기 위한 `EventEmitter` 클래스입니다.
 
-You initialize that using
+다음과 같이 초기화할 수 있습니다.
 
 ```cjs
 const EventEmitter = require('node:events');
@@ -26,12 +29,12 @@ import EventEmitter from 'node:events';
 const eventEmitter = new EventEmitter();
 ```
 
-This object exposes, among many others, the `on` and `emit` methods.
+이 객체는 여러 메서드를 노출하며, 그중에서 중요한 `on` 과 `emit` 메서드가 있습니다.
 
-- `emit` is used to trigger an event
-- `on` is used to add a callback function that's going to be executed when the event is triggered
+- `emit`: 이벤트를 **발생**시키는 데 사용됩니다.
+- `on`: 이벤트가 발생했을 때 실행할 **콜백 함수**를 추가하는 데 사용됩니다.
 
-For example, let's create a `start` event, and as a matter of providing a sample, we react to that by just logging to the console:
+예를 들어, `start` 라는 이벤트를 생성하고, 콘솔에 출력함으로써 이벤트에 반응해봅시다.
 
 ```js
 eventEmitter.on('start', () => {
@@ -39,15 +42,16 @@ eventEmitter.on('start', () => {
 });
 ```
 
-When we run
+이후 다음을 실행하면
 
 ```js
 eventEmitter.emit('start');
 ```
 
+이벤트 핸들러 함수가 트리거되며 콘솔에 로그가 출력됩니다.
 the event handler function is triggered, and we get the console log.
 
-You can pass arguments to the event handler by passing them as additional arguments to `emit()`:
+`emit()` 메서드에 추가적인 인자를 전달하여 이벤트 핸들러에 값을 넘길 수 있습니다.
 
 ```js
 eventEmitter.on('start', (number) => {
@@ -57,7 +61,7 @@ eventEmitter.on('start', (number) => {
 eventEmitter.emit('start', 23);
 ```
 
-Multiple arguments:
+여러 개의 인자 전달하기
 
 ```js
 eventEmitter.on('start', (start, end) => {
@@ -67,10 +71,10 @@ eventEmitter.on('start', (start, end) => {
 eventEmitter.emit('start', 1, 100);
 ```
 
-The EventEmitter object also exposes several other methods to interact with events, like
+EventEmitter 객체는 이벤트에 상호작용할 수 있는 몇 가지 다른 메서드도 제공합니다:
 
-- `once()`: add a one-time listener
-- `removeListener()` / `off()`: remove an event listener from an event
-- `removeAllListeners()`: remove all listeners for an event
+- `once()`: 한 번만 실행되는(one-time) 이벤트 리스너를 추가합니다.
+- `removeListener()` / `off()`: 이벤트에서 특정 리스너를 제거합니다.
+- `removeAllListeners()`: 특정 이벤트에 등록된 모든 리스너를 제거합니다.
 
-You can read more about these methods in the [official documentation](https://nodejs.org/api/events.html).
+이 메서드들에 대한 더 자세한 내용은 [공식 문서](https://nodejs.org/api/events.html) 에서 확인할 수 있습니다.
