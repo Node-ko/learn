@@ -1,10 +1,10 @@
 ---
-title: TypeScript 네이티브로 실행하기
+title: 타입스크립트 네이티브로 실행하기
 layout: learn
 authors: AugustinMauroy
 ---
 
-# TypeScript 네이티브로 실행하기
+# 타입스크립트 네이티브로 실행하기
 > ❗️ *번역 날짜: 2024년 12월 16일* <br>
 > 공식 문서 원문은 아래를 참고하세요.<br>
 > [Running TypeScript Natively](https://nodejs.org/en/learn/typescript/run-natively)
