@@ -1,12 +1,15 @@
 ---
-title: Understanding setImmediate()
+title: 이해하기 setImmediate()
 layout: learn
 authors: flaviocopes, MylesBorins, LaRuaNa, ahmadawais, clean99, ovflowd
 ---
 
-# Understanding setImmediate()
+> ❗️ _번역 날짜: 2024년 12월 17일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [Understanding setImmediate()](https://nodejs.org/en/learn/asynchronous-work/understanding-setimmediate#understanding-setimmediate)
 
-When you want to execute some piece of code asynchronously, but as soon as possible, one option is to use the `setImmediate()` function provided by Node.js:
+# setImmediate() 이해하기
+
+코드를 비동기적으로 실행하지만 가능한 한 빠르게 실행하고 싶을 때, Node.js에서 제공하는 `setImmediate()` 함수를 사용할 수 있습니다:
 
 ```js
 setImmediate(() => {
@@ -14,19 +17,23 @@ setImmediate(() => {
 });
 ```
 
-Any function passed as the setImmediate() argument is a callback that's executed in the next iteration of the event loop.
+setImmediate() 의 인자로 전달된 함수는 이벤트 루프의 다음 반복(iteration)에 실행되는 **콜백** (**callback**)입니다.
 
-How is `setImmediate()` different from `setTimeout(() => {}, 0)` (passing a 0ms timeout), and from `process.nextTick()` and `Promise.then()`?
+`setImmediate()` 과 `setTimeout(() => {}, 0)` (0초의 타임아웃을 넘기는) 는 무엇이 다르며, `process.nextTick()` 과 `Promise.then()` 는 무엇이 다를까요?
 
-A function passed to `process.nextTick()` is going to be executed on the current iteration of the event loop, after the current operation ends. This means it will always execute before `setTimeout` and `setImmediate`.
+`process.nextTick()` 에 전달된 함수는 이벤트 루프의 현재 작업 이후 **현재 반복(iteration)** 이 끝난 직후 실행됩니다.
 
-A `setTimeout()` callback with a 0ms delay is very similar to `setImmediate()`. The execution order will depend on various factors, but they will be both run in the next iteration of the event loop.
+즉, 항상 `setTimeout` 이나 `setImmediate`.보다 먼저 실행됩니다.
 
-A `process.nextTick` callback is added to `process.nextTick queue`. A `Promise.then()` callback is added to `promises microtask queue`. A `setTimeout`, `setImmediate` callback is added to `macrotask queue`.
+`setTimeout()` 0ms의 지연시간을 가진 콜백은 `setImmediate()` 와 매우 유사합니다. The 실행 순서는 여러 요인에 따라 달라질 수 있지만, 두 콜백 모두 이벤트 루프의 다음 반복에 실행됩니다.
 
-Event loop executes tasks in `process.nextTick queue` first, and then executes `promises microtask queue`, and then executes `macrotask queue`.
+- `process.nextTick` 콜백은 `process.nextTick queue` 에 추가됩니다.
+- `Promise.then()` 콜백은 `promises microtask queue`에 추가됩니다.
+- `setTimeout`,`setImmediate` 콜백은 `macrotask queue` 에 추가됩니다.
 
-Here is an example to show the order between `setImmediate()`, `process.nextTick()` and `Promise.then()`:
+이벤트 루프는 `process.nextTick queue` 의 작업을 먼저 수행하고, `promises microtask queue`, `macrotask queue` 의 순서로 작업을 수행합니다.
+
+아래 코드는 `setImmediate()`, `process.nextTick()` 그리고 `Promise.then()` 간의 실행 순서를 보여줍니다.
 
 ```js
 const baz = () => console.log('baz');
@@ -50,12 +57,12 @@ start();
 // start foo bar zoo baz
 ```
 
-This code will first call `start()`, then call `foo()` in `process.nextTick queue`. After that, it will handle `promises microtask queue`, which prints `bar` and adds `zoo()` in `process.nextTick queue` at the same time. Then it will call `zoo()` which has just been added. In the end, the `baz()` in `macrotask queue` is called.
+이 코드는 `start()` 를 가장 먼저 호출할 것이고, 이후 `process.nextTick queue` 의 `foo()` 를 호출할 것입니다. 그런 다음 `promises microtask queue` 의 `bar` 를 출력하고 동시에 `process.nextTick queue` 에 `zoo()` 를 추가합니다. 이제 방금 추가된 `zoo()` 를 호출하고 `macrotask queue` 의 `baz()` 가 마지막으로 호출됩니다.
 
-The principle aforementioned holds true in CommonJS cases, but keep in mind in ES Modules, e.g. `mjs` files, the execution order will be different:
+위의 원칙은 CommonJS 환경에서 유효하지만, `mjs` 파일과 같은 ES Modules 환경에서는 실행 순서가 다를 수 있음을 유념해야합니다.
 
 ```js
 // start bar foo zoo baz
 ```
 
-This is because the ES Module being loaded is wrapped as an asynchronous operation, and thus the entire script is actually already in the `promises microtask queue`. So when the promise is immediately resolved, its callback is appended to the `microtask` queue. Node.js will attempt to clear the queue until moving to any other queue, and hence you will see it outputs `bar` first.
+이는 로드되고있는 ES Module이 비동기적 작업으로 감싸져 실행되기 때문입니다. 따라서 전체 스크립트가 이미 `promises microtask queue` 에 존재하게 됩니다. 그래서 Promise가 즉시 해결(resolve) 되면 해당 콜백이 `microtask` 에 추가됩니다. Node.js는 `microtask` 큐를 비울 때까지 다른 큐로 이동하지 않으므로, `bar` 가 먼저 출력되는 것입니다.
