@@ -20,7 +20,7 @@
 - [Introduction to TypeScript](docs/typescript/introduction-to-typescript.md)
 - [Running TypeScript code using transpilation](docs/typescript/running-typescript-code-using-transpilation.md)
 - [Running TypeScript with a runner](docs/typescript/running-typescript-with-a-runner.md)
-- [TypeScript 네이티브로 실행하기](docs/typescript/running-typescript-natively.md)
+- [타입스크립트 네이티브로 실행하기](docs/typescript/running-typescript-natively.md)
 
 ## Asynchronous Work
 
