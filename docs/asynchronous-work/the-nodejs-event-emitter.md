@@ -5,9 +5,10 @@ authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, ovflowd
 ---
 
 > ❗️ _번역 날짜: 2024년 12월 17일_ <br />
-> 공식 문서 원문은 아래를 참고하세요.<br /> > [The Node.js Event emitter](https://nodejs.org/en/learn/asynchronous-work/the-nodejs-event-emitter#the-nodejs-event-emitter)
+> 공식 문서 원문은 아래를 참고하세요.<br />
+> [The Node.js Event emitter](https://nodejs.org/en/learn/asynchronous-work/the-nodejs-event-emitter#the-nodejs-event-emitter)
 
-# The Node.js Event emitter
+# Node.js의 Event emitter
 
 브라우저에서 JavaScript를 사용해 봤다면, 마우스 클릭, 키보드 버튼 입력, 마우스 움직임에 반응하기 등 정말 많은 상호작용이 이벤트를 통해 처리된다는 것을 알고 있을 것입니다.
 
