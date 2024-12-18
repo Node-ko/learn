@@ -1,12 +1,11 @@
 ---
-title: 이해하기 setImmediate()
+title: setImmediate() 이해하기
 layout: learn
 authors: flaviocopes, MylesBorins, LaRuaNa, ahmadawais, clean99, ovflowd
 ---
 
 > ❗️ _번역 날짜: 2024년 12월 17일_ <br />
-> 공식 문서 원문은 아래를 참고하세요.<br />
-> [Understanding setImmediate()](https://nodejs.org/en/learn/asynchronous-work/understanding-setimmediate#understanding-setimmediate)
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [Understanding setImmediate()](https://nodejs.org/en/learn/asynchronous-work/understanding-setimmediate#understanding-setimmediate)
 
 # setImmediate() 이해하기
 
