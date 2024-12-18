@@ -1,31 +1,34 @@
 ---
-title: Understanding process.nextTick()
+title: process.nextTick() 이해하기
 layout: learn
 authors: flaviocopes, MylesBorins, LaRuaNa, ahmadawais, ovflowd, marksist300
 ---
 
-# Understanding process.nextTick()
+# process.nextTick() 이해하기
 
-As you try to understand the Node.js event loop, one important part of it is `process.nextTick()`.
-Every time the runtime calls back into JavaScript for an event, we call it a tick.
+> ❗️ _번역 날짜: 2024년 12월 18일_ <br>
+> 공식 문서 원문은 아래를 참고하세요.<br> > [Understanding process.nextTick()](https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick)
 
-When we pass a function to `process.nextTick()`, we instruct the engine to invoke this function immediately after the current operation completes, before moving to the next phase in the event loop:
+Node.js 이벤트 루프를 이해하려고 할 때, 중요한 부분 중 하나는 `process.nextTick()`입니다.
+런타임이 이벤트를 처리하기 위해 JavaScript로 다시 호출할 때마다 이를 tick이라고 부릅니다.
+
+`process.nextTick()`에 함수를 전달하면, 현재 작업이 완료된 직후, 이벤트 루프의 다음 단계로 이동하기 전에 이 함수를 호출하도록 엔진에 지시합니다:
 
 ```js
 process.nextTick(() => {
-  // do something
+  // 무언가 실행
 });
 ```
 
-The event loop is busy processing the current function code. When this operation ends, the JS engine runs all the functions passed to `nextTick` calls during that operation.
+이벤트 루프는 현재 함수 코드를 처리하는 데 바쁩니다. 이 작업이 끝나면, JS 엔진은 해당 작업 중 `nextTick` 호출에 전달된 모든 함수를 실행합니다.
 
-It's the way we can tell the JS engine to process a function asynchronously (after the current function), but as soon as possible, not queue it.
+이는 JS 엔진에 현재 함수 이후에 비동기적으로(즉시) 함수를 처리하라고 지시하는 방법이며, 대기열에 추가하지 않습니다.
 
-Calling `setTimeout(() => {}, 0)` will execute the function at the end of next tick, much later than when using `nextTick()` which prioritizes the call and executes it just before the beginning of the next tick.
+`setTimeout(() => {}, 0)`을 호출하면 해당 함수는 다음 tick의 끝에 실행되지만, `nextTick()`을 사용하면 호출이 우선순위를 가져서 다음 tick의 시작 직전에 실행됩니다.
 
-Use `nextTick()` when you want to make sure that in the next event loop iteration that code is already executed.
+다음 이벤트 루프 반복에서 코드가 이미 실행되었는지 확인하려면 `nextTick()`을 사용하십시오.
 
-#### An Example of the order of events:
+#### 이벤트 순서 예제:
 
 ```js
 console.log('Hello => number 1');
@@ -43,7 +46,7 @@ process.nextTick(() => {
 });
 ```
 
-#### Example output:
+#### 예제 출력:
 
 ```bash
 Hello => number 1
@@ -52,4 +55,4 @@ Running before the timeout => number 3
 The timeout running last => number 4
 ```
 
-The exact output may differ from run to run.
+출력 결과는 실행마다 다를 수 있습니다.
