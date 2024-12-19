@@ -24,7 +24,7 @@
 
 ## Asynchronous Work
 
-- [Asynchronous flow control](docs/asynchronous-work/asynchronous-flow-control.md)
+- [비동기 흐름 제어](docs/asynchronous-work/asynchronous-flow-control.md)
 - [Overview of Blocking vs Non-Blocking](docs/asynchronous-work/overview-of-blocking-vs-non-blocking.md)
 - [JavaScript Asynchronous Programming and Callbacks](docs/asynchronous-work/javascript-asynchronous-programming-and-callbacks.md)
 - [Discover JavaScript Timers](docs/asynchronous-work/discover-javascript-timers.md)
