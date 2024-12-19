@@ -1,10 +1,10 @@
 ---
-title: 자바스크립트 비동기 프로그래밍 및 콜백
+title: JavaScript 비동기 프로그래밍 및 콜백
 layout: learn
 authors: flaviocopes, MylesBorins, LaRuaNa, amiller-gh, ahmadawais, ovflowd
 ---
 
-# 자바스크립트 비동기 프로그래밍 및 콜백
+# JavaScript 비동기 프로그래밍 및 콜백
 > ❗️ *번역 날짜: 2024년 12월 17일* <br>
 > 공식 문서 원문은 아래를 참고하세요.<br>
 > [JavaScript Asynchronous Programming and Callbacks](https://nodejs.org/en/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks)
@@ -23,9 +23,9 @@ authors: flaviocopes, MylesBorins, LaRuaNa, amiller-gh, ahmadawais, ovflowd
 
 일반적으로 프로그래밍 언어는 동기적이며, 일부 언어는 비동기성을 처리할 수 있는 방법을 언어 자체나 라이브러리를 통해 제공합니다. C, Java, C#, PHP, Go, Ruby, Swift, Python은 기본적으로 동기적입니다. 이들 중 일부는 비동기 작업을 처리하기 위해 스레드를 사용하거나 새로운 프로세스를 생성합니다.
 
-## 자바스크립트
+## JavaScript
 
-자바스크립트는 기본적으로 **동기적**이며 단일 스레드로 실행됩니다. 즉, 코드가 새로운 스레드를 생성하거나 병렬로 실행될 수 없습니다.
+JavaScript는 기본적으로 **동기적**이며 단일 스레드로 실행됩니다. 즉, 코드가 새로운 스레드를 생성하거나 병렬로 실행될 수 없습니다.
 
 코드는 순차적으로, 하나씩 실행됩니다. 예를 들어:
 
@@ -37,7 +37,7 @@ console.log(c);
 doSomething();
 ```
 
-하지만 자바스크립트는 브라우저 내에서 시작되었고, 초기에는 `onClick`, `onMouseOver`, `onChange`, `onSubmit` 등과 같은 사용자 동작에 응답하는 것이 주요 역할이었습니다. 동기적인 프로그래밍 모델로 어떻게 이런 작업을 처리할 수 있었을까요?
+하지만 JavaScript는 브라우저 내에서 시작되었고, 초기에는 `onClick`, `onMouseOver`, `onChange`, `onSubmit` 등과 같은 사용자 동작에 응답하는 것이 주요 역할이었습니다. 동기적인 프로그래밍 모델로 어떻게 이런 작업을 처리할 수 있었을까요?
 
 그 답은 바로 환경에 있습니다. **브라우저**는 이러한 기능을 처리할 수 있는 API 집합을 제공하여 이를 가능하게 했습니다.
 
@@ -55,7 +55,7 @@ document.getElementById('button').addEventListener('click', () => {
 
 이를 소위 **콜백**이라고 합니다.
 
-콜백은 다른 함수에 값으로 전달되는 간단한 함수로, 이벤트가 발생할 때만 실행됩니다. 자바스크립트는 일급 함수(first-class functions)를 지원하기 때문에 함수는 변수에 할당하거나 다른 함수로 전달할 수 있습니다. (이를 **고차 함수**라고 합니다)
+콜백은 다른 함수에 값으로 전달되는 간단한 함수로, 이벤트가 발생할 때만 실행됩니다. JavaScript는 일급 함수(first-class functions)를 지원하기 때문에 함수는 변수에 할당하거나 다른 함수로 전달할 수 있습니다. (이를 **고차 함수**라고 합니다)
 
 페이지가 준비되었을 때만 콜백 함수가 실행되도록 `window` 객체에 `load` 이벤트 리스너를 사용하여 모든 클라이언트 코드를 감싸는 것이 일반적입니다:
 
@@ -135,4 +135,4 @@ window.addEventListener('load', () => {
 
 ### 콜백의 대안
 
-ES6부터 자바스크립트는 콜백을 사용하지 않고 비동기 코드를 처리할 수 있는 여러 가지 기능을 도입했습니다: Promises (ES6)와 Async/Await (ES2017)입니다.
+ES6부터 JavaScript는 콜백을 사용하지 않고 비동기 코드를 처리할 수 있는 여러 가지 기능을 도입했습니다: Promises (ES6)와 Async/Await (ES2017)입니다.
