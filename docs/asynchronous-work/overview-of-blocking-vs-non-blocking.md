@@ -1,51 +1,39 @@
 ---
-title: Overview of Blocking vs Non-Blocking
+title: 블로킹과 논블로킹의 개요
 layout: learn
 authors: ovflowd, HassanBahati
 ---
 
-# Overview of Blocking vs Non-Blocking
+# 블로킹과 논블로킹의 개요
+> ❗️ *번역 날짜: 2024년 12월 17일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+> [Overview of Blocking vs Non-Blocking](https://nodejs.org/en/learn/asynchronous-work/overview-of-blocking-vs-non-blocking)
 
-This overview covers the difference between **blocking** and **non-blocking**
-calls in Node.js. This overview will refer to the event loop and libuv but no
-prior knowledge of those topics is required. Readers are assumed to have a
-basic understanding of the JavaScript language and Node.js [callback pattern](/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks).
+이 개요에서는 Node.js에서의 **블로킹** 과 **논블로킹**의 차이점에 대해 다룹니다. 이 과정에서 이벤트 루프와 libuv에 대해 언급하지만, 이에 대한 사전 지식은 필요하지 않습니다. 독자는 JavaScript 언어와 Node.js의 [callback pattern](/learn/asynchronous-work/javascript-asynchronous-programming-and-callbacks)에 대한 기본적인 이해가 있다고 가정합니다.
 
-> "I/O" refers primarily to interaction with the system's disk and
-> network supported by [libuv](https://libuv.org/).
+> "I/O"는 주로 [libuv](https://libuv.org/)에서 지원하는 시스템 디스크 및 네트워크와의 상호 작용을 의미합니다.
 
-## Blocking
+## 블로킹
 
-**Blocking** is when the execution of additional JavaScript in the Node.js
-process must wait until a non-JavaScript operation completes. This happens
-because the event loop is unable to continue running JavaScript while a
-**blocking** operation is occurring.
+**블로킹**이란 Node.js 프로세스에서 추가적인 JavaScript 실행이 비-JavaScript 작업이 완료될 때까지 기다려야 하는 상황을 말합니다. 이는 **블로킹** 작업이 진행되는 동안 이벤트 루프가 JavaScript 실행을 계속할 수 없기 때문에 발생합니다.
 
-In Node.js, JavaScript that exhibits poor performance due to being CPU intensive
-rather than waiting on a non-JavaScript operation, such as I/O, isn't typically
-referred to as **blocking**. Synchronous methods in the Node.js standard library
-that use libuv are the most commonly used **blocking** operations. Native
-modules may also have **blocking** methods.
+Node.js에서 CPU 집약적인 작업으로 인해 성능이 저하되는 JavaScript는, I/O와 같은 비-JavaScript 작업을 대기하는 경우와는 달리 일반적으로 **블로킹**이라고 부르지 않습니다. Node.js 표준 라이브러리의 동기 메서드 중 libuv를 사용하는 메서드가 가장 흔히 사용되는 **블로킹** 작업에 해당합니다. 또한, 네이티브 모듈도 **블로킹** 메서드를 포함할 수 있습니다.
 
-All of the I/O methods in the Node.js standard library provide asynchronous
-versions, which are **non-blocking**, and accept callback functions. Some
-methods also have **blocking** counterparts, which have names that end with
-`Sync`.
+Node.js 표준 라이브러리의 모든 I/O 메서드는 비동기 버전을 제공하며, 이는 **논블로킹** 방식으로 동작하고 콜백 함수를 지원합니다. 일부 메서드는 이름이 `Sync`로 끝나는 **블로킹** 버전도 제공합니다.
 
-## Comparing Code
+## 코드 비교
 
-**Blocking** methods execute **synchronously** and **non-blocking** methods
-execute **asynchronously**.
+**블로킹** 메서드는 **동기적**으로 실행되며, **논블로킹** 메서드는 **비동기적**으로 실행됩니다.
 
-Using the File System module as an example, this is a **synchronous** file read:
+파일 시스템 모듈(File System module)을 예로 들면, 다음은 **동기적** 파일 읽기 방식입니다:
 
 ```js
 const fs = require('node:fs');
 
-const data = fs.readFileSync('/file.md'); // blocks here until file is read
+const data = fs.readFileSync('/file.md'); // 파일을 읽을 때까지 여기에서 실행이 멈춥니다.
 ```
 
-And here is an equivalent **asynchronous** example:
+다음은 이에 해당하는 **비동기적** 예제입니다:
 
 ```js
 const fs = require('node:fs');
@@ -55,24 +43,19 @@ fs.readFile('/file.md', (err, data) => {
 });
 ```
 
-The first example appears simpler than the second but has the disadvantage of
-the second line **blocking** the execution of any additional JavaScript until
-the entire file is read. Note that in the synchronous version if an error is
-thrown it will need to be caught or the process will crash. In the asynchronous
-version, it is up to the author to decide whether an error should throw as
-shown.
+첫 번째 예제는 두 번째 예제보다 간단해 보이지만, 파일 전체가 읽힐 때까지 두 번째 줄이 실행을 **블로킹**하여 추가적인 JavaScript 실행이 멈추는 단점이 있습니다. 동기식 버전에서는 오류가 발생하면 이를 처리해야 하며, 그렇지 않으면 프로세스가 종료됩니다. 반면, 비동기식 버전에서는 오류를 발생시킬지 여부를 작성자가 결정해야 합니다.
 
-Let's expand our example a little bit:
+예제를 조금 확장해 봅시다:
 
 ```js
 const fs = require('node:fs');
 
-const data = fs.readFileSync('/file.md'); // blocks here until file is read
+const data = fs.readFileSync('/file.md'); // 여기에서 파일이 읽힐 때까지 실행이 멈춥니다
 console.log(data);
-moreWork(); // will run after console.log
+moreWork(); // console.log가 표시된 후에 실행됩니다
 ```
 
-And here is a similar, but not equivalent asynchronous example:
+다음은 유사하지만 완전히 동일하지 않은 비동기적 예제입니다:
 
 ```js
 const fs = require('node:fs');
@@ -81,37 +64,22 @@ fs.readFile('/file.md', (err, data) => {
   if (err) throw err;
   console.log(data);
 });
-moreWork(); // will run before console.log
+moreWork(); // console.log가 표시되기 전에 실행됩니다.
 ```
 
-In the first example above, `console.log` will be called before `moreWork()`. In
-the second example `fs.readFile()` is **non-blocking** so JavaScript execution
-can continue and `moreWork()` will be called first. The ability to run
-`moreWork()` without waiting for the file read to complete is a key design
-choice that allows for higher throughput.
+위의 첫 번째 예제에서는 `console.log`가 `moreWork()`보다 먼저 호출됩니다. 두 번째 예제에서는 `fs.readFile()`가 **논블로킹**이기 때문에 JavaScript 실행이 계속 진행될 수 있고, 그 결과 `moreWork()`가 먼저 호출됩니다. 파일 읽기가 완료될 때까지 기다리지 않고 `moreWork()`를 실행할 수 있는 능력은 더 높은 처리량을 가능하게 하는 중요한 설계 선택입니다.
 
-## Concurrency and Throughput
+## 동시성과 처리량
 
-JavaScript execution in Node.js is single threaded, so concurrency refers to the
-event loop's capacity to execute JavaScript callback functions after completing
-other work. Any code that is expected to run in a concurrent manner must allow
-the event loop to continue running as non-JavaScript operations, like I/O, are
-occurring.
+Node.js에서 JavaScript 실행은 단일 스레드에서 이루어지므로, 동시성은 다른 작업을 완료한 후 이벤트 루프가 JavaScript 콜백 함수를 실행할 수 있는 기능을 의미합니다. 동시적으로 실행될 것으로 예상되는 코드는 I/O와 같은 비-JavaScript 작업이 발생하는 동안 이벤트 루프가 계속 실행될 수 있도록 해야 합니다.
 
-As an example, let's consider a case where each request to a web server takes
-50ms to complete and 45ms of that 50ms is database I/O that can be done
-asynchronously. Choosing **non-blocking** asynchronous operations frees up that
-45ms per request to handle other requests. This is a significant difference in
-capacity just by choosing to use **non-blocking** methods instead of
-**blocking** methods.
+예를 들어, 웹 서버에 대한 각 요청이 완료되는 데 50ms가 걸리고, 그 50ms 중 45ms는 비동기적으로 처리할 수 있는 데이터베이스 I/O 작업이라고 가정해봅시다. **논블로킹** 비동기 작업을 선택하면 각 요청당 45ms를 다른 요청을 처리하는 데 할애할 수 있게 됩니다. **블로킹** 메서드 대신 **논블로킹** 메서드를 사용함으로써 처리 용량에 큰 차이가 발생합니다.
 
-The event loop is different than models in many other languages where additional
-threads may be created to handle concurrent work.
+이벤트 루프는 많은 다른 언어에서 동시 작업을 처리하기 위해 추가 스레드를 생성하는 모델과는 다릅니다.
 
-## Dangers of Mixing Blocking and Non-Blocking Code
+## 블로킹 코드와 논블로킹 코드를 혼합하는 위험성
 
-There are some patterns that should be avoided when dealing with I/O. Let's look
-at an example:
+I/O 작업을 처리할 때 피해야 할 몇 가지 패턴이 있습니다. 예시를 살펴보겠습니다:
 
 ```js
 const fs = require('node:fs');
@@ -123,10 +91,7 @@ fs.readFile('/file.md', (err, data) => {
 fs.unlinkSync('/file.md');
 ```
 
-In the above example, `fs.unlinkSync()` is likely to be run before
-`fs.readFile()`, which would delete `file.md` before it is actually read. A
-better way to write this, which is completely **non-blocking** and guaranteed to
-execute in the correct order is:
+위의 예제에서 `fs.unlinkSync()`는 `fs.readFile()`보다 먼저 실행될 가능성이 높아, 실제로 파일을 읽기 전에 `file.md`가 삭제될 수 있습니다. 이를 개선한 방법은 완전히 **논블로킹** 방식으로, 올바른 순서대로 실행될 수 있도록 보장됩니다. 아래와 같이 작성할 수 있습니다:
 
 ```js
 const fs = require('node:fs');
@@ -140,9 +105,8 @@ fs.readFile('/file.md', (readFileErr, data) => {
 });
 ```
 
-The above places a **non-blocking** call to `fs.unlink()` within the callback of
-`fs.readFile()` which guarantees the correct order of operations.
+위 코드는 `fs.readFile()`의 콜백 내에서 **논블로킹** 방식으로 `fs.unlink()` 호출을 배치하여 작업 순서가 올바르게 실행되도록 보장합니다.
 
-## Additional Resources
+## 추가 자료
 
 - [libuv](https://libuv.org/)

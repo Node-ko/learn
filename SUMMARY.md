@@ -17,21 +17,21 @@
 
 ## TypeScript
 
-- [Introduction to TypeScript](docs/typescript/introduction-to-typescript.md)
-- [TypeScript 코드 사용하기](docs/typescript/running-typescript-code-using-transpilation.md)
-- [Running TypeScript with a runner](docs/typescript/running-typescript-with-a-runner.md)
-- [Running TypeScript Natively](docs/typescript/running-typescript-natively.md)
+- [TypeScript 소개](docs/typescript/introduction-to-typescript.md)
+- [Running TypeScript code using transpilation](docs/typescript/running-typescript-code-using-transpilation.md)
+- [runner를 사용하여 TypeScript 실행하기](docs/typescript/running-typescript-with-a-runner.md)
+- [TypeScript 네이티브로 실행하기](docs/typescript/running-typescript-natively.md)
 
 ## Asynchronous Work
 
-- [비동기 흐름 제어](docs/asynchronous-work/asynchronous-flow-control.md)
-- [Overview of Blocking vs Non-Blocking](docs/asynchronous-work/overview-of-blocking-vs-non-blocking.md)
-- [JavaScript Asynchronous Programming and Callbacks](docs/asynchronous-work/javascript-asynchronous-programming-and-callbacks.md)
-- [Discover JavaScript Timers](docs/asynchronous-work/discover-javascript-timers.md)
+- [Asynchronous flow control](docs/asynchronous-work/asynchronous-flow-control.md)
+- [블로킹과 논블로킹의 개요](docs/asynchronous-work/overview-of-blocking-vs-non-blocking.md)
+- [JavaScript 비동기 프로그래밍 및 콜백](docs/asynchronous-work/javascript-asynchronous-programming-and-callbacks.md)
+- [JavaScript 타이머 알아보기](docs/asynchronous-work/discover-javascript-timers.md)
 - [The Node.js Event Loop](docs/asynchronous-work/the-nodejs-event-loop.md)
-- [The Node.js Event Emitter](docs/asynchronous-work/the-nodejs-event-emitter.md)
-- [Understanding process.nextTick()](docs/asynchronous-work/understanding-process-nexttick.md)
-- [Understanding setImmediate()](docs/asynchronous-work/understanding-setimmediate.md)
+- [Node.js의 Event emitter](docs/asynchronous-work/the-nodejs-event-emitter.md)
+- [process.nextTick() 이해하기](docs/asynchronous-work/understanding-process-nexttick.md)
+- [setImmediate() 이해하기](docs/asynchronous-work/understanding-setimmediate.md)
 - [Don't Block the Event Loop](docs/asynchronous-work/dont-block-the-event-loop.md)
 
 ## Manipulating Files

@@ -1,48 +1,52 @@
 ---
-title: Running TypeScript with a runner
+title: runner로 TypeScript 실행하기
 layout: learn
 authors: AugustinMauroy
 ---
 
-# Running TypeScript with a runner
+# runner를 사용하여 TypeScript 실행하기
 
-In the previous article, we learned how to run TypeScript code using transpilation. In this article, we will learn how to run TypeScript code using a runner.
+> ❗️ _번역 날짜: 2024년 12월 17일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br />
+> [Running TypeScript with a runner](https://nodejs.org/en/learn/typescript/run#running-typescript-with-a-runner)
 
-## Running TypeScript code with `ts-node`
+이전 글에서는 **트랜스파일링** (**transpilation**)을 사용해 TypeScript 코드를 실행하는 방법을 알아봤습니다. 이번 글에서는 어떻게 runner를 사용하여 TypeScript 코드를 실행하는지 배워보겠습니다.
 
-[ts-node](https://typestrong.org/ts-node/) is a TypeScript execution environment for Node.js. It allows you to run TypeScript code directly in Node.js without the need to compile it first. Note, however, that it does not type check your code. So we recommend to type check your code first with `tsc` and then run it with `ts-node` before shipping it.
+## TypeScript 코드를 `ts-node` 를 이용해 실행하기
 
-To use `ts-node`, you need to install it first:
+[ts-node](https://typestrong.org/ts-node/) 는 Node.js용 TypeScript 실행환경입니다. 이를 사용하면 코드를 먼저 컴파일하지 않고도 TypeScript 코드를 직접 Node.js에서 실행할 수 있습니다. 하지만 주의할 점은 `ts-node` 는 코드의 타입 체크를 수행하지 않는다는 것입니다. 따라서 코드를 배포하기 전에 `tsc` 를 사용해 타입 체크를 먼저 수행하고 `ts-node` 로 실행하는 것을 권장합니다.
+
+**ts-node**를 사용하기 위해 먼저 이를 설치해야 합니다.
 
 ```bash
 npm i -D ts-node
 ```
 
-Then you can run your TypeScript code like this:
+그리고 아래와 같이 TypeScript코드를 실행할 수 있습니다.
 
 ```bash
 npx ts-node example.ts
 ```
 
-## Running TypeScript code with `tsx`
+## `tsx` 로 TypeScript 코드 실행하기
 
-[tsx](https://tsx.is/) is another TypeScript execution environment for Node.js. It allows you to run TypeScript code directly in Node.js without the need to compile it first. Note, however, that it does not type check your code. So we recommend to type check your code first with `tsc` and then run it with `tsx` before shipping it.
+[tsx](https://tsx.is/) 는 또 다른 Node.js용 TypeScript 실행 환경입니다. `tsx` 를 사용하면 코드를 먼저 컴파일하지 않고도 TypeScript 코드를 직접 Node.js에서 실행할 수 있습니다. 하지만 tsx 역시 코드의 타입 체크를 수행하지 않습니다. 따라서 `tsc` 를 사용해 타입 체크를 먼저 수행하고 `tsx` 로 실행하는 것을 권장합니다.
 
-To use `tsx`, you need to install it first:
+`tsx` 를 사용하기 위해, 이를 먼저 이를 설치해야 합니다.
 
 ```bash
 npm i -D tsx
 ```
 
-Then you can run your TypeScript code like this:
+그리고 아래와 같이 TypeScript코드를 실행할 수 있습니다.
 
 ```bash
 npx tsx example.ts
 ```
 
-### Registering `tsx` via `node`
+## `node` 에서 `tsx` 등록하기
 
-If you want to use `tsx` via `node`, you can register `tsx` via `--import`:
+만약 `node` 에서 `tsx` 를 사용하고싶다면 `--import` 를 통해 `tsx` 를 등록할 수 있습니다.
 
 ```bash
 node --import=tsx example.ts
