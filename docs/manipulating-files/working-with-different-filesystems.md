@@ -1,34 +1,38 @@
 ---
-title: How to work with Different Filesystems
+title: 다양한 파일시스템에서 작업하는 법
 layout: learn
 ---
 
-# How to Work with Different Filesystems
+> ❗️ _번역 날짜: 2024년 12월 21일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [How to Work with Different Filesystems](https://nodejs.org/en/learn/manipulating-files/working-with-different-filesystems)
 
-Node.js exposes many features of the filesystem. But not all filesystems are alike.
-The following are suggested best practices to keep your code simple and safe
-when working with different filesystems.
+# 다양한 파일시스템에서 작업하는 법
 
-## Filesystem Behavior
+Node.js 는 파일 시스템의 많은 기능을 제공합니다. 하지만 모든 파일 시스템이 동일하지는 않습니다.
 
-Before you can work with a filesystem, you need to know how it behaves.
-Different filesystems behave differently and have more or less features than
-others: case sensitivity, case insensitivity, case preservation, Unicode form
-preservation, timestamp resolution, extended attributes, inodes, Unix
-permissions, alternate data streams etc.
+다양한 파일 시스템을 다룰 때 코드를 간단하고 안전하게 유지하기 위한 권장 모범 사례는 다음과 같습니다.
 
-Be wary of inferring filesystem behavior from `process.platform`. For example,
-do not assume that because your program is running on Darwin that you are
-therefore working on a case-insensitive filesystem (HFS+), as the user may be
-using a case-sensitive filesystem (HFSX). Similarly, do not assume that because
-your program is running on Linux that you are therefore working on a filesystem
-which supports Unix permissions and inodes, as you may be on a particular
-external drive, USB or network drive which does not.
+## 파일 시스템 동작 (Filesystem behavior)
 
-The operating system may not make it easy to infer filesystem behavior, but all
-is not lost. Instead of keeping a list of every known filesystem and behavior
-(which is always going to be incomplete), you can probe the filesystem to see
-how it actually behaves. The presence or absence of certain features which are
+파일 시스템을 사용하기 전에, 해당 파일 시스템이 어떻게 동작하는지 알아야 합니다. 파일 시스템마다 동작 방식이 다르고, 지원하는 기능도 다를 수 있습니다.
+
+예를 들면
+
+- 대소문자 구분 여부
+- 대소문자 비구분 및 대소문자 보존 여부
+- 유니코드 형식 보존 여부
+- 타임스탬프의 해상도
+- 확장 속성
+- 인덱스 노드(inodes)
+- 유닉스 권한(permissions)
+- 대체 데이터 스트림 등
+
+`process.platform` 값을 통해 파일 시스템의 동작을 추론하는 것은 위험할 수 있습니다. 예를 들면, Darwin(Mac OS) 에서 실행된다고 해서 반드시 대소문자를 구분하지 않는 파일시스템(HFS+)를 사용한다고 단정지을 수 없습니다. 사용자가 대소문자를 구분하는 파일시스템(HFSX)를 사용하고 있을 수도 있기 때문입니다.
+
+또는, Linux에서 실행된다고 해서 유닉스 권한과 인덱스 노드를 지원하는 파일시스템을 사용한다고 단정지을 수 없습니다. 외부 드라이브, USB 또는 네트워크 드라이브처럼 해당 기능을 지원하지 않는 파일 시스템일 수도 있기 때문입니다.
+
+운영체제는 파일 시스템 동작을 추론하기 어렵게 만들 수 있지만, 모든 것이 불가능한 것은 아닙니다. 모든 파일 시스템과 동작 목록을 유지하는 대신(항상 불완전할 수 있음), 파일 시스템의 실제 동작을 프로브(probe)하여 확인할 수 있습니다. 기능이 존재하는 지 여부는 프로브하기 쉽습니다. 또한
+The presence or absence of certain features which are
 easy to probe, are often enough to infer the behavior of other features which
 are more difficult to probe.
 
