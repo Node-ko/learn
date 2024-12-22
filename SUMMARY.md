@@ -36,13 +36,13 @@
 
 ## Manipulating Files
 
-- [Node.js File stats](docs/manipulating-files/nodejs-file-stats.md)
+- [Node.js 파일 상태 정보 (file stats)](docs/manipulating-files/nodejs-file-stats.md)
 - [Node.js File Paths](docs/manipulating-files/nodejs-file-paths.md)
 - [Working with file descriptors in Node.js](docs/manipulating-files/working-with-file-descriptors-in-nodejs.md)
 - [Reading files with Node.js](docs/manipulating-files/reading-files-with-nodejs.md)
 - [Writing files with Node.js](docs/manipulating-files/writing-files-with-nodejs.md)
 - [Working with folders in Node.js](docs/manipulating-files/working-with-folders-in-nodejs.md)
-- [How to work with Different Filesystems](docs/manipulating-files/how-to-work-with-different-filesystems.md)
+- [다양한 파일시스템에서 작업하는 법](docs/manipulating-files/how-to-work-with-different-filesystems.md)
 
 ## Command Line
 
