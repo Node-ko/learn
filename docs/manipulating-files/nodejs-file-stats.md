@@ -1,40 +1,43 @@
 ---
-title: Node.js file stats
+title: Node.js 파일 상태 정보 (file stats)
 layout: learn
 authors: flaviocopes, ZYSzys, MylesBorins, fhemberger, LaRuaNa, ahmadawais, clean99, ovflowd, vaishnav-mk
 ---
 
-# Node.js file stats
+> ❗️ _번역 날짜: 2024년 12월 21일_ <br />
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [Node.js file stats](https://nodejs.org/en/learn/manipulating-files/nodejs-file-stats)
 
-Every file comes with a set of details that we can inspect using Node.js. In particular, using the `stat()` method provided by the [`fs` module](https://nodejs.org/api/fs.html).
+# Node.js 파일 상태 정보 (file stats)
 
-You call it passing a file path, and once Node.js gets the file details it will call the callback function you pass, with 2 parameters: an error message, and the file stats:
+Node.js를 사용할 때 우리가 확인할 수 있는 모든 파일은 세부 정보를 가지고 있습니다. 특히 [`fs` module](https://nodejs.org/api/fs.html) 이 제공하는 `stat()` 메서드를 통해 이런 정보들을 확인할 수 있습니다.
 
-```cjs
+이 메서드는 호출할 때 파일 경로를 전달하며, Node.js가 파일의 세부 정보를 가져오면 **에러 메시지** 와 **파일 상태 정보** 두개의 매개변수를 포함한 콜백 함수가 호출됩니다.
+
+```js
 const fs = require('node:fs');
 
 fs.stat('/Users/joe/test.txt', (err, stats) => {
   if (err) {
     console.error(err);
   }
-  // we have access to the file stats in `stats`
+  // 이제 `stats` 에 있는 파일 상태 정보에 대한 접근이 가능합니다.
 });
 ```
 
-```mjs
+```js
 import fs from 'node:fs';
 
 fs.stat('/Users/joe/test.txt', (err, stats) => {
   if (err) {
     console.error(err);
   }
-  // we have access to the file stats in `stats`
+  // `stats` 에 있는 파일 상태 정보에 대한 접근이 가능합니다.
 });
 ```
 
-Node.js also provides a sync method, which blocks the thread until the file stats are ready:
+Node.js는 파일 상태 정보가 준비될 때까지 스레드를 차단하는 동기식 메서드도 제공합니다.
 
-```cjs
+```js
 const fs = require('node:fs');
 
 try {
@@ -44,7 +47,7 @@ try {
 }
 ```
 
-```mjs
+```js
 import fs from 'node:fs';
 
 try {
@@ -54,17 +57,17 @@ try {
 }
 ```
 
-The file information is included in the stats variable. What kind of information can we extract using the stats?
+파일 정보는 stats 변수에 포함되어 있습니다. stats를 사용해 어떤 정보를 추출할 수 있을까요?
 
-**A lot, including:**
+**다음을 포함한 다양한 정보가 있습니다.**
 
-- if the file is a directory or a file, using `stats.isFile()` and `stats.isDirectory()`
-- if the file is a symbolic link using `stats.isSymbolicLink()`
-- the file size in bytes using `stats.size`.
+- 파일이 디렉터리인지 파일인지 확인: `stats.isFile()`, `stats.isDirectory()`
+- 파일이 심볼릭 링크인지 확인: `stats.isSymbolicLink()`
+- 파일 크기를 바이트 단위로 확인: `stats.size`.
 
-There are other advanced methods, but the bulk of what you'll use in your day-to-day programming is this.
+여기에 더 고급 메서드도 있지만, 일상적인 프로그래밍에서 자주 사용하는 것은 위와 같습니다.
 
-```cjs
+```js
 const fs = require('node:fs');
 
 fs.stat('/Users/joe/test.txt', (err, stats) => {
@@ -80,7 +83,7 @@ fs.stat('/Users/joe/test.txt', (err, stats) => {
 });
 ```
 
-```mjs
+```js
 import fs from 'node:fs';
 
 fs.stat('/Users/joe/test.txt', (err, stats) => {
@@ -96,9 +99,9 @@ fs.stat('/Users/joe/test.txt', (err, stats) => {
 });
 ```
 
-You can also use promise-based `fsPromises.stat()` method offered by the `fs/promises` module if you like:
+`fsPromises.stat()` 모듈에서 제공하는 promise 기반의 `fs/promises` 메서드를 사용할 수도 있습니다.
 
-```cjs
+```js
 const fs = require('node:fs/promises');
 
 async function example() {
@@ -115,7 +118,7 @@ async function example() {
 example();
 ```
 
-```mjs
+```js
 import fs from 'node:fs/promises';
 
 try {
@@ -129,4 +132,4 @@ try {
 }
 ```
 
-You can read more about the `fs` module in the [official documentation](https://nodejs.org/api/fs.html).
+`fs` 모듈에 대한 자세한 내용은 [공식 문서](https://nodejs.org/api/fs.html)에서 확인할 수 있습니다.
