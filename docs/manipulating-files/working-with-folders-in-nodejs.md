@@ -1,20 +1,23 @@
 ---
-title: Working with folders in Node.js
+title: Node.js로 폴더 작업하기
 layout: learn
 authors: flaviocopes, MylesBorins, fhemberger, liangpeili, LaRuaNa, ahmadawais, clean99
 ---
 
-# Working with folders in Node.js
+# Node.js로 폴더 작업하기
+> ❗️ *번역 날짜: 2024년 12월 23일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Working with folders in Node.js](https://nodejs.org/en/learn/manipulating-files/working-with-folders-in-nodejs)
 
-The Node.js `fs` core module provides many handy methods you can use to work with folders.
+Node.js `fs` 코어 모듈은 폴더를 작업하는 데 유용한 많은 메서드를 제공합니다.
 
-## Check if a folder exists
+## 폴더가 존재하는지 확인하기
 
-Use `fs.access()` (and its promise-based `fsPromises.access()` counterpart) to check if the folder exists and Node.js can access it with its permissions.
+`fs.access()` (및 promise-based `fsPromises.access()` 대응)를 사용하여 폴더가 존재하고 Node.js가 권한을 통해 액세스할 수 있는지 확인합니다.
 
-## Create a new folder
+## 새 폴더 만들기
 
-Use `fs.mkdir()` or `fs.mkdirSync()` or `fsPromises.mkdir()` to create a new folder.
+`fs.mkdir()` 또는 `fs.mkdirSync()` 또는 `fsPromises.mkdir()`을 사용하여 새 폴더를 만듭니다.
 
 ```cjs
 const fs = require('node:fs');
@@ -44,11 +47,11 @@ try {
 }
 ```
 
-## Read the content of a directory
+## 디렉토리 내용 읽기
 
-Use `fs.readdir()` or `fs.readdirSync()` or `fsPromises.readdir()` to read the contents of a directory.
+`fs.readdir()` 또는 `fs.readdirSync()` 또는 `fsPromises.readdir()`을 사용하여 디렉토리 내용을 읽습니다.
 
-This piece of code reads the content of a folder, both files and subfolders, and returns their relative path:
+이 코드는 폴더의 내용을 읽고 파일과 하위 폴더를 반환합니다:
 
 ```cjs
 const fs = require('node:fs');
@@ -66,7 +69,7 @@ const folderPath = '/Users/joe';
 fs.readdirSync(folderPath);
 ```
 
-You can get the full path:
+전체 경로를 얻을 수 있습니다:
 
 ```js
 fs.readdirSync(folderPath).map(fileName => {
@@ -74,7 +77,7 @@ fs.readdirSync(folderPath).map(fileName => {
 });
 ```
 
-You can also filter the results to only return the files, and exclude the folders:
+결과를 파일로 필터링하고 폴더를 제외할 수 있습니다:
 
 ```cjs
 const fs = require('node:fs');
@@ -104,9 +107,9 @@ fs.readdirSync(folderPath)
   .filter(isFile);
 ```
 
-## Rename a folder
+## 폴더 이름 변경
 
-Use `fs.rename()` or `fs.renameSync()` or `fsPromises.rename()` to rename folder. The first parameter is the current path, the second the new path:
+`fs.rename()` 또는 `fs.renameSync()` 또는 `fsPromises.rename()`을 사용하여 폴더 이름을 변경합니다. 첫 번째 매개변수는 현재 경로이고 두 번째 매개변수는 새 경로입니다:
 
 ```cjs
 const fs = require('node:fs');
@@ -130,7 +133,7 @@ fs.rename('/Users/joe', '/Users/roger', err => {
 });
 ```
 
-`fs.renameSync()` is the synchronous version:
+`fs.renameSync()`는 동기 버전입니다:
 
 ```cjs
 const fs = require('node:fs');
@@ -152,7 +155,7 @@ try {
 }
 ```
 
-`fsPromises.rename()` is the promise-based version:
+`fsPromises.rename()`은 promise-based 버전입니다:
 
 ```cjs
 const fs = require('node:fs/promises');
@@ -177,9 +180,9 @@ try {
 }
 ```
 
-## Remove a folder
+## 폴더 삭제
 
-Use `fs.rmdir()` or `fs.rmdirSync()` or `fsPromises.rmdir()` to remove a folder.
+`fs.rmdir()` 또는 `fs.rmdirSync()` 또는 `fsPromises.rmdir()`을 사용하여 폴더를 삭제합니다.
 
 ```cjs
 const fs = require('node:fs');
@@ -205,9 +208,9 @@ fs.rmdir(dir, err => {
 });
 ```
 
-To remove a folder that has contents use `fs.rm()` with the option `{ recursive: true }` to recursively remove the contents.
+내용이 있는 폴더를 삭제하려면 `fs.rm()`을 사용하고 옵션 `{ recursive: true }`을 사용하여 재귀적으로 내용을 삭제합니다.
 
-`{ recursive: true, force: true }` makes it so that exceptions will be ignored if the folder does not exist.
+`{ recursive: true, force: true }`는 폴더가 존재하지 않으면 예외를 무시하도록 합니다.
 
 ```cjs
 const fs = require('node:fs');
