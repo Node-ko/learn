@@ -1,120 +1,123 @@
 ---
-title: Don't Block the Event Loop (or the Worker Pool)
+title: 이벤트 루프(또는 워커 풀)를 차단하지 마세요
 layout: learn
 ---
 
-# Don't Block the Event Loop (or the Worker Pool)
+# 이벤트 루프(또는 워커 풀)를 차단하지 마세요
 
-## Should you read this guide?
+> ❗️ _번역 날짜: 2024년 12월 21일_ <br>
+> 공식 문서 원문은 아래를 참고하세요.<br> > [Don't Block the Event Loop (or the Worker Pool)](https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop)
 
-If you're writing anything more complicated than a brief command-line script, reading this should help you write higher-performance, more-secure applications.
+## 이 가이드를 읽어야 할까요?
 
-This document is written with Node.js servers in mind, but the concepts apply to complex Node.js applications as well.
-Where OS-specific details vary, this document is Linux-centric.
+짧은 명령줄 스크립트보다 더 복잡한 애플리케이션을 작성 중이라면, 이 가이드를 읽음으로써 더 높은 성능과 더 안전한 애플리케이션을 작성할 수 있습니다.
 
-## Summary
+이 문서는 Node.js 서버를 염두에 두고 작성되었지만, 개념적으로는 복잡한 Node.js 애플리케이션에도 적용됩니다. OS별 세부 사항이 다를 수 있지만, 이 문서는 리눅스 중심으로 설명합니다.
 
-Node.js runs JavaScript code in the Event Loop (initialization and callbacks), and offers a Worker Pool to handle expensive tasks like file I/O.
-Node.js scales well, sometimes better than more heavyweight approaches like Apache.
-The secret to the scalability of Node.js is that it uses a small number of threads to handle many clients.
-If Node.js can make do with fewer threads, then it can spend more of your system's time and memory working on clients rather than on paying space and time overheads for threads (memory, context-switching).
-But because Node.js has only a few threads, you must structure your application to use them wisely.
+## 요약
 
-Here's a good rule of thumb for keeping your Node.js server speedy:
-_Node.js is fast when the work associated with each client at any given time is "small"_.
+Node.js는 이벤트 루프(초기화 및 콜백)에서 JavaScript 코드를 실행하며, 파일 I/O와 같은 비용이 큰 작업을 처리하기 위해 워커 풀을 제공합니다.  
+Node.js는 종종 Apache와 같은 더 무거운 접근 방식보다 더 나은 확장성을 제공합니다.  
+Node.js 확장성의 비결은 적은 수의 스레드를 사용하여 많은 클라이언트를 처리하는 데 있습니다.  
+Node.js가 적은 스레드로 작업을 수행할 수 있다면, 스레드 관리에 소비되는 공간과 시간 대신 클라이언트 작업에 시스템의 시간과 메모리를 더 많이 사용할 수 있습니다.  
+하지만 Node.js는 스레드 수가 제한적이므로, 애플리케이션을 구조화하여 스레드를 효율적으로 사용해야 합니다.
 
-This applies to callbacks on the Event Loop and tasks on the Worker Pool.
+다음은 Node.js 서버를 빠르게 유지하기 위한 간단한 규칙입니다:  
+_Node.js는 각 클라이언트와 관련된 작업이 "작을 때" 빠릅니다._
 
-## Why should I avoid blocking the Event Loop and the Worker Pool?
+이 규칙은 이벤트 루프의 콜백과 워커 풀 작업 모두에 적용됩니다.
 
-Node.js uses a small number of threads to handle many clients.
-In Node.js there are two types of threads: one Event Loop (aka the main loop, main thread, event thread, etc.), and a pool of `k` Workers in a Worker Pool (aka the threadpool).
+## 왜 이벤트 루프와 워커 풀을 차단하면 안 되는가?
 
-If a thread is taking a long time to execute a callback (Event Loop) or a task (Worker), we call it "blocked".
-While a thread is blocked working on behalf of one client, it cannot handle requests from any other clients.
-This provides two motivations for blocking neither the Event Loop nor the Worker Pool:
+Node.js는 적은 수의 스레드를 사용하여 많은 클라이언트를 처리합니다.  
+Node.js에는 두 가지 유형의 스레드가 있습니다: 하나의 이벤트 루프(메인 루프, 메인 스레드 등으로도 불림)와 워커 풀에 있는 `k`개의 워커(스레드 풀).
 
-1. Performance: If you regularly perform heavyweight activity on either type of thread, the _throughput_ (requests/second) of your server will suffer.
-2. Security: If it is possible that for certain input one of your threads might block, a malicious client could submit this "evil input", make your threads block, and keep them from working on other clients. This would be a [Denial of Service](https://en.wikipedia.org/wiki/Denial-of-service_attack) attack.
+스레드가 콜백(이벤트 루프)이나 작업(워커) 실행에 오랜 시간을 소모하면, 이를 "차단(blocked)" 상태라고 합니다.  
+스레드가 특정 클라이언트를 위해 차단된 경우, 다른 클라이언트의 요청을 처리할 수 없습니다.  
+이로 인해 다음 두 가지 동기가 생깁니다:
 
-## A quick review of Node
+1. **성능**: 두 유형의 스레드에서 무거운 작업이 정기적으로 수행되면, 서버의 _처리량_(요청/초)이 감소합니다.
+2. **보안**: 특정 입력으로 인해 스레드가 차단될 가능성이 있다면, 악성 클라이언트가 "악의적인 입력"을 제출하여 스레드를 차단시키고, 다른 클라이언트의 작업을 방해할 수 있습니다. 이는 [서비스 거부(DoS)](https://en.wikipedia.org/wiki/Denial-of-service_attack) 공격의 한 형태입니다.
 
-Node.js uses the Event-Driven Architecture: it has an Event Loop for orchestration and a Worker Pool for expensive tasks.
+## Node.js 간단 복습
 
-### What code runs on the Event Loop?
+Node.js는 이벤트 기반 아키텍처를 사용합니다. 이는 이벤트 루프와 워커 풀을 기반으로 운영됩니다.
 
-When they begin, Node.js applications first complete an initialization phase, `require`'ing modules and registering callbacks for events.
-Node.js applications then enter the Event Loop, responding to incoming client requests by executing the appropriate callback.
-This callback executes synchronously, and may register asynchronous requests to continue processing after it completes.
-The callbacks for these asynchronous requests will also be executed on the Event Loop.
+### 이벤트 루프에서 실행되는 코드
 
-The Event Loop will also fulfill the non-blocking asynchronous requests made by its callbacks, e.g., network I/O.
+Node.js 애플리케이션은 처음에 초기화 단계를 거치며, 이 단계에서 모듈을 `require`하고 이벤트에 대한 콜백을 등록합니다.  
+그런 다음 이벤트 루프에 진입하여 들어오는 클라이언트 요청에 응답하며 적절한 콜백을 실행합니다.  
+이 콜백은 동기적으로 실행되며 완료 후 추가 처리를 위해 비동기 요청을 등록할 수 있습니다.  
+이러한 비동기 요청의 콜백도 이벤트 루프에서 실행됩니다.
 
-In summary, the Event Loop executes the JavaScript callbacks registered for events, and is also responsible for fulfilling non-blocking asynchronous requests like network I/O.
+이벤트 루프는 네트워크 I/O와 같은 비차단 비동기 요청도 처리합니다.
 
-### What code runs on the Worker Pool?
+요약하면, 이벤트 루프는 이벤트에 대해 등록된 JavaScript 콜백을 실행하며, 네트워크 I/O 같은 비차단 비동기 요청도 처리합니다.
 
-The Worker Pool of Node.js is implemented in libuv ([docs](http://docs.libuv.org/en/v1.x/threadpool.html)), which exposes a general task submission API.
+### 워커 풀에서 실행되는 코드
 
-Node.js uses the Worker Pool to handle "expensive" tasks.
-This includes I/O for which an operating system does not provide a non-blocking version, as well as particularly CPU-intensive tasks.
+Node.js의 워커 풀은 libuv ([문서](http://docs.libuv.org/en/v1.x/threadpool.html))를 사용하여 구현되며, 일반적인 작업 제출 API를 제공합니다.
 
-These are the Node.js module APIs that make use of this Worker Pool:
+Node.js는 워커 풀을 사용하여 "비용이 큰" 작업을 처리합니다.  
+이는 운영 체제가 비차단 버전을 제공하지 않는 I/O 작업이나, 특히 CPU 집약적인 작업을 포함합니다.
 
-1. I/O-intensive
+다음은 이 워커 풀을 사용하는 Node.js 모듈 API입니다:
+
+1. **I/O 집약적인 작업**
    1. [DNS](https://nodejs.org/api/dns.html): `dns.lookup()`, `dns.lookupService()`.
-   2. [File System](https://nodejs.org/api/fs.html#fs_threadpool_usage): All file system APIs except `fs.FSWatcher()` and those that are explicitly synchronous use libuv's threadpool.
-2. CPU-intensive
+   2. [파일 시스템](https://nodejs.org/api/fs.html#fs_threadpool_usage): `fs.FSWatcher()`와 명시적으로 동기적인 API를 제외한 모든 파일 시스템 API는 libuv의 스레드 풀을 사용합니다.
+2. **CPU 집약적인 작업**
    1. [Crypto](https://nodejs.org/api/crypto.html): `crypto.pbkdf2()`, `crypto.scrypt()`, `crypto.randomBytes()`, `crypto.randomFill()`, `crypto.generateKeyPair()`.
-   2. [Zlib](https://nodejs.org/api/zlib.html#zlib_threadpool_usage): All zlib APIs except those that are explicitly synchronous use libuv's threadpool.
+   2. [Zlib](https://nodejs.org/api/zlib.html#zlib_threadpool_usage): 명시적으로 동기적인 API를 제외한 모든 zlib API는 libuv의 스레드 풀을 사용합니다.
 
-In many Node.js applications, these APIs are the only sources of tasks for the Worker Pool. Applications and modules that use a [C++ add-on](https://nodejs.org/api/addons.html) can submit other tasks to the Worker Pool.
+많은 Node.js 애플리케이션에서 이 API들은 워커 풀 작업의 유일한 소스입니다.  
+[C++ 애드온](https://nodejs.org/api/addons.html)을 사용하는 애플리케이션과 모듈은 워커 풀에 다른 작업을 제출할 수도 있습니다.
 
-For the sake of completeness, we note that when you call one of these APIs from a callback on the Event Loop, the Event Loop pays some minor setup costs as it enters the Node.js C++ bindings for that API and submits a task to the Worker Pool.
-These costs are negligible compared to the overall cost of the task, which is why the Event Loop is offloading it.
-When submitting one of these tasks to the Worker Pool, Node.js provides a pointer to the corresponding C++ function in the Node.js C++ bindings.
+완전성을 위해, 이벤트 루프의 콜백에서 이러한 API 중 하나를 호출하면, 이벤트 루프는 해당 API의 Node.js C++ 바인딩으로 진입하면서 약간의 설정 비용을 지불한 후 작업을 워커 풀에 제출합니다.  
+이러한 비용은 전체 작업 비용에 비해 미미하므로, 이벤트 루프는 이를 오프로드합니다.  
+Node.js는 이러한 작업을 워커 풀에 제출할 때 Node.js C++ 바인딩의 해당 C++ 함수에 대한 포인터를 제공합니다.
 
-### How does Node.js decide what code to run next?
+### Node.js는 어떤 코드를 다음에 실행할지 어떻게 결정하나요?
 
-Abstractly, the Event Loop and the Worker Pool maintain queues for pending events and pending tasks, respectively.
+추상적으로, 이벤트 루프와 워커 풀은 각각 대기 중인 이벤트와 대기 중인 작업에 대한 큐를 유지합니다.
 
-In truth, the Event Loop does not actually maintain a queue.
-Instead, it has a collection of file descriptors that it asks the operating system to monitor, using a mechanism like [epoll](http://man7.org/linux/man-pages/man7/epoll.7.html) (Linux), [kqueue](https://developer.apple.com/library/content/documentation/Darwin/Conceptual/FSEvents_ProgGuide/KernelQueues/KernelQueues.html) (OSX), event ports (Solaris), or [IOCP](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365198.aspx) (Windows).
-These file descriptors correspond to network sockets, any files it is watching, and so on.
-When the operating system says that one of these file descriptors is ready, the Event Loop translates it to the appropriate event and invokes the callback(s) associated with that event.
-You can learn more about this process [here](https://www.youtube.com/watch?v=P9csgxBgaZ8).
+실제로, 이벤트 루프는 큐를 유지하지 않습니다.  
+대신, 네트워크 소켓 및 감시 중인 파일과 같은 파일 디스크립터의 집합을 운영 체제에 요청하여 모니터링합니다.  
+이 과정은 [epoll](http://man7.org/linux/man-pages/man7/epoll.7.html) (Linux), [kqueue](https://developer.apple.com/library/content/documentation/Darwin/Conceptual/FSEvents_ProgGuide/KernelQueues/KernelQueues.html) (OSX), 이벤트 포트(Solaris), 또는 [IOCP](https://msdn.microsoft.com/en-us/library/windows/desktop/aa365198.aspx) (Windows)와 같은 메커니즘을 통해 이루어집니다.  
+운영 체제가 이러한 파일 디스크립터 중 하나가 준비되었음을 알리면, 이벤트 루프는 이를 적절한 이벤트로 변환하고 해당 이벤트와 연관된 콜백을 호출합니다.  
+이 프로세스에 대한 자세한 내용은 [여기](https://www.youtube.com/watch?v=P9csgxBgaZ8)에서 확인할 수 있습니다.
 
-In contrast, the Worker Pool uses a real queue whose entries are tasks to be processed.
-A Worker pops a task from this queue and works on it, and when finished the Worker raises an "At least one task is finished" event for the Event Loop.
+반대로, 워커 풀은 처리해야 할 작업으로 구성된 실제 큐를 사용합니다.  
+워커는 이 큐에서 작업을 꺼내 처리하며, 작업이 완료되면 이벤트 루프에 "적어도 하나의 작업이 완료됨" 이벤트를 발생시킵니다.
 
-### What does this mean for application design?
+### 애플리케이션 설계에 대한 의미
 
-In a one-thread-per-client system like Apache, each pending client is assigned its own thread.
-If a thread handling one client blocks, the operating system will interrupt it and give another client a turn.
-The operating system thus ensures that clients that require a small amount of work are not penalized by clients that require more work.
+Apache와 같은 클라이언트당 스레드 하나를 사용하는 시스템에서는 각 대기 클라이언트가 자체 스레드에 할당됩니다.  
+하나의 클라이언트를 처리하는 스레드가 차단되면, 운영 체제는 이를 중단하고 다른 클라이언트에 턴을 제공합니다.  
+이로 인해 적은 작업량을 요구하는 클라이언트가 더 많은 작업량을 요구하는 클라이언트로 인해 불이익을 받지 않도록 보장됩니다.
 
-Because Node.js handles many clients with few threads, if a thread blocks handling one client's request, then pending client requests may not get a turn until the thread finishes its callback or task.
-_The fair treatment of clients is thus the responsibility of your application_.
-This means that you shouldn't do too much work for any client in any single callback or task.
+Node.js는 적은 수의 스레드를 사용하여 많은 클라이언트를 처리하기 때문에, 한 클라이언트의 요청을 처리하는 스레드가 차단되면, 그 스레드가 콜백이나 작업을 완료하기 전까지 대기 중인 클라이언트 요청은 턴을 얻지 못할 수 있습니다.  
+_클라이언트의 공정한 처리는 애플리케이션의 책임입니다._  
+따라서 각 클라이언트에 대해 단일 콜백이나 작업에서 너무 많은 작업을 수행해서는 안 됩니다.
 
-This is part of why Node.js can scale well, but it also means that you are responsible for ensuring fair scheduling.
-The next sections talk about how to ensure fair scheduling for the Event Loop and for the Worker Pool.
+이것이 Node.js가 확장성을 잘 제공할 수 있는 이유 중 하나이지만, 공정한 스케줄링을 보장하는 것도 사용자의 책임입니다.  
+다음 섹션에서는 이벤트 루프와 워커 풀에 대해 공정한 스케줄링을 보장하는 방법을 다룹니다.
 
-## Don't block the Event Loop
+## Event 루프를 차단하지 마세요
 
-The Event Loop notices each new client connection and orchestrates the generation of a response.
-All incoming requests and outgoing responses pass through the Event Loop.
-This means that if the Event Loop spends too long at any point, all current and new clients will not get a turn.
+Event 루프는 각 새 클라이언트 연결을 인지하고 응답 생성을 조율합니다.
+모든 들어오는 요청과 나가는 응답은 Event 루프를 통과합니다.
+즉, Event 루프가 어느 시점에서든 너무 오래 걸리면 현재 및 새 클라이언트는 기회를 얻지 못합니다.
 
-You should make sure you never block the Event Loop.
-In other words, each of your JavaScript callbacks should complete quickly.
-This of course also applies to your `await`'s, your `Promise.then`'s, and so on.
+Event 루프를 절대 차단하지 않도록 해야 합니다.
+즉, 각 JavaScript 콜백은 신속하게 완료되어야 합니다.
+이 규칙은 `await`나 `Promise.then` 등에도 동일하게 적용됩니다.
 
-A good way to ensure this is to reason about the ["computational complexity"](https://en.wikipedia.org/wiki/Time_complexity) of your callbacks.
-If your callback takes a constant number of steps no matter what its arguments are, then you'll always give every pending client a fair turn.
-If your callback takes a different number of steps depending on its arguments, then you should think about how long the arguments might be.
+콜백의 ["계산 복잡도"](https://en.wikipedia.org/wiki/Time_complexity)를 분석하여 이를 확인하는 것이 좋습니다.
+콜백이 인수와 관계없이 일정한 단계 수를 가지는 경우, 대기 중인 모든 클라이언트에게 공정한 기회를 줄 수 있습니다.
+콜백이 인수에 따라 다른 단계 수를 가지는 경우, 인수가 얼마나 클 수 있는지를 고려해야 합니다.
 
-Example 1: A constant-time callback.
+### 예제 1: 일정 시간 콜백
 
 ```js
 app.get('/constant-time', (req, res) => {
@@ -122,13 +125,13 @@ app.get('/constant-time', (req, res) => {
 });
 ```
 
-Example 2: An `O(n)` callback. This callback will run quickly for small `n` and more slowly for large `n`.
+### 예제 2: `O(n)` 콜백. 이 콜백은 작은 `n`에서는 빠르게 실행되지만, 큰 `n`에서는 더 느리게 실행됩니다.
 
 ```js
 app.get('/countToN', (req, res) => {
   let n = req.query.n;
 
-  // n iterations before giving someone else a turn
+  // n 반복 후 다른 작업으로 전환
   for (let i = 0; i < n; i++) {
     console.log(`Iter ${i}`);
   }
@@ -137,13 +140,13 @@ app.get('/countToN', (req, res) => {
 });
 ```
 
-Example 3: An `O(n^2)` callback. This callback will still run quickly for small `n`, but for large `n` it will run much more slowly than the previous `O(n)` example.
+### 예제 3: `O(n^2)` 콜백. 이 콜백은 작은 `n`에서는 여전히 빠르게 실행되지만, 큰 `n`에서는 이전 `O(n)` 예제보다 훨씬 느리게 실행됩니다.
 
 ```js
 app.get('/countToN2', (req, res) => {
   let n = req.query.n;
 
-  // n^2 iterations before giving someone else a turn
+  // n^2 반복 후 다른 작업으로 전환
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       console.log(`Iter ${i}.${j}`);
@@ -154,42 +157,43 @@ app.get('/countToN2', (req, res) => {
 });
 ```
 
-### How careful should you be?
+### 얼마나 신중해야 하나요?
 
-Node.js uses the Google V8 engine for JavaScript, which is quite fast for many common operations.
-Exceptions to this rule are regexps and JSON operations, discussed below.
+Node.js는 JavaScript에 대해 Google V8 엔진을 사용하며, 이는 일반적인 작업에 대해 상당히 빠릅니다.
+정규 표현식과 JSON 작업은 예외로, 아래에서 논의합니다.
 
-However, for complex tasks you should consider bounding the input and rejecting inputs that are too long.
-That way, even if your callback has large complexity, by bounding the input you ensure the callback cannot take more than the worst-case time on the longest acceptable input.
-You can then evaluate the worst-case cost of this callback and determine whether its running time is acceptable in your context.
+그러나 복잡한 작업의 경우 입력을 제한하고 너무 긴 입력을 거부하는 것을 고려해야 합니다.
+이렇게 하면 콜백의 복잡도가 크더라도 입력을 제한함으로써 최악의 경우라도 허용 가능한 입력에서 최대 시간을 초과하지 않도록 보장할 수 있습니다.
+그런 다음 이 콜백의 최악의 실행 시간을 평가하고 컨텍스트에서 실행 시간이 허용 가능한지 결정할 수 있습니다.
 
-### Blocking the Event Loop: REDOS
+### Event 루프 차단: REDOS
 
-One common way to block the Event Loop disastrously is by using a "vulnerable" [regular expression](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
+Event 루프를 치명적으로 차단하는 일반적인 방법 중 하나는 "취약한" [정규 표현식](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)을 사용하는 것입니다.
 
-#### Avoiding vulnerable regular expressions
+#### 취약한 정규 표현식 피하기
 
-A regular expression (regexp) matches an input string against a pattern.
-We usually think of a regexp match as requiring a single pass through the input string --- `O(n)` time where `n` is the length of the input string.
-In many cases, a single pass is indeed all it takes.
-Unfortunately, in some cases the regexp match might require an exponential number of trips through the input string --- `O(2^n)` time.
-An exponential number of trips means that if the engine requires `x` trips to determine a match, it will need `2*x` trips if we add only one more character to the input string.
-Since the number of trips is linearly related to the time required, the effect of this evaluation will be to block the Event Loop.
+정규 표현식(Regexp)은 입력 문자열을 패턴에 따라 일치시킵니다.
+일반적으로 정규 표현식 매치는 입력 문자열을 한 번 통과하는 것으로 생각됩니다 — `O(n)` 시간, 여기서 `n`은 입력 문자열의 길이입니다.
+많은 경우 한 번의 통과로 충분합니다.
+그러나 일부 경우에는 정규 표현식 매치가 입력 문자열을 통과하는 데 지수적인 횟수가 필요할 수 있습니다 — `O(2^n)` 시간.
+지수적인 횟수란 매치에 `x` 횟수가 필요하다면 입력 문자열에 한 문자만 더 추가하면 `2*x` 횟수가 필요하다는 것을 의미합니다.
+이 횟수는 소요 시간과 선형적으로 관련이 있으므로, 이 평가의 결과로 Event 루프가 차단됩니다.
 
-A _vulnerable regular expression_ is one on which your regular expression engine might take exponential time, exposing you to [REDOS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS) on "evil input".
-Whether or not your regular expression pattern is vulnerable (i.e. the regexp engine might take exponential time on it) is actually a difficult question to answer, and varies depending on whether you're using Perl, Python, Ruby, Java, JavaScript, etc., but here are some rules of thumb that apply across all of these languages:
+_취약한 정규 표현식_ 은 정규 표현식 엔진이 지수 시간을 소요할 수 있는 정규 표현식을 말하며, "악의적인 입력"에 대해 [REDOS](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS)를 초래할 수 있습니다.
+정규 표현식 패턴이 취약한지 여부(즉, 정규 표현식 엔진이 이에 대해 지수 시간을 소요할 가능성)는 사실 어렵게 답할 수 있는 질문이며 Perl, Python, Ruby, Java, JavaScript 등 사용 언어에 따라 다릅니다.
+그러나 다음은 모든 언어에 적용되는 일반적인 규칙입니다.
 
-1. Avoid nested quantifiers like `(a+)*`. V8's regexp engine can handle some of these quickly, but others are vulnerable.
-2. Avoid OR's with overlapping clauses, like `(a|a)*`. Again, these are sometimes-fast.
-3. Avoid using backreferences, like `(a.*) \1`. No regexp engine can guarantee evaluating these in linear time.
-4. If you're doing a simple string match, use `indexOf` or the local equivalent. It will be cheaper and will never take more than `O(n)`.
+1. `(a+)*`와 같은 중첩된 수량자를 피하세요. V8의 정규 표현식 엔진은 일부를 빠르게 처리할 수 있지만, 다른 것은 취약할 수 있습니다.
+2. `(a|a)*`와 같은 중첩된 OR 절을 피하세요. 이러한 경우도 일부는 빠를 수 있습니다.
+3. `(a.*) \1`와 같은 역참조 사용을 피하세요. 어떤 정규 표현식 엔진도 이를 선형 시간으로 평가할 수 없습니다.
+4. 단순한 문자열 매치를 수행하는 경우, `indexOf` 또는 로컬 동등 연산을 사용하세요. 더 저렴하며 `O(n)` 시간을 초과하지 않습니다.
 
-If you aren't sure whether your regular expression is vulnerable, remember that Node.js generally doesn't have trouble reporting a _match_ even for a vulnerable regexp and a long input string.
-The exponential behavior is triggered when there is a mismatch but Node.js can't be certain until it tries many paths through the input string.
+정규 표현식이 취약한지 확신이 서지 않는 경우, Node.js는 일반적으로 긴 입력 문자열에 대해 문제가 없으며 정규 표현식에 대해 _매치_ 를 보고할 수 있다는 점을 기억하세요.
+지수적 동작은 불일치가 발생했지만 Node.js가 모든 경로를 시도할 때까지 확신할 수 없을 때 촉발됩니다.
 
-#### A REDOS example
+#### REDOS 예시
 
-Here is an example vulnerable regexp exposing its server to REDOS:
+다음은 서버가 REDOS에 노출될 수 있는 취약한 정규 표현식의 예입니다:
 
 ```js
 app.get('/redos-me', (req, res) => {
@@ -206,69 +210,78 @@ app.get('/redos-me', (req, res) => {
 });
 ```
 
-The vulnerable regexp in this example is a (bad!) way to check for a valid path on Linux.
-It matches strings that are a sequence of "/"-delimited names, like "/a/b/c".
-It is dangerous because it violates rule 1: it has a doubly-nested quantifier.
+이 예제에서 사용된 취약한 정규 표현식은 Linux에서 유효한 경로를 확인하려는 (잘못된!) 방법입니다.
+"/a/b/c"와 같은 "/"로 구분된 이름들의 시퀀스를 매칭합니다.
+그러나 이 표현식은 규칙 1을 위반하고 중첩된 수량자를 포함하고 있기 때문에 위험합니다.
 
-If a client queries with filePath `///.../\n` (100 /'s followed by a newline character that the regexp's "." won't match), then the Event Loop will take effectively forever, blocking the Event Loop.
-This client's REDOS attack causes all other clients not to get a turn until the regexp match finishes.
+클라이언트가 `///.../
+` (100개의 `/` 뒤에 정규 표현식의 "."이 매칭되지 않는 개행 문자 포함)을 filePath로 보낸다면,
+이벤트 루프가 사실상 영원히 멈추고 다른 모든 클라이언트가 순서를 기다려야 합니다.
+이러한 클라이언트의 REDOS 공격은 정규 표현식 매칭이 완료될 때까지 이벤트 루프를 차단합니다.
 
-For this reason, you should be leery of using complex regular expressions to validate user input.
+이러한 이유로, 사용자 입력을 검증하기 위해 복잡한 정규 표현식을 사용하는 것에 신중해야 합니다.
 
-#### Anti-REDOS Resources
+#### Anti-REDOS 리소스
 
-There are some tools to check your regexps for safety, like
+정규 표현식의 안전성을 확인하는 몇 가지 도구가 있습니다:
 
 - [safe-regex](https://github.com/davisjam/safe-regex)
-- [rxxr2](https://github.com/superhuman/rxxr2).
+- [rxxr2](https://github.com/superhuman/rxxr2)
 
-However, neither of these will catch all vulnerable regexps.
+그러나 이러한 도구들도 모든 취약한 정규 표현식을 잡아내지는 못합니다.
 
-Another approach is to use a different regexp engine.
-You could use the [node-re2](https://github.com/uhop/node-re2) module, which uses Google's blazing-fast [RE2](https://github.com/google/re2) regexp engine.
-But be warned, RE2 is not 100% compatible with V8's regexps, so check for regressions if you swap in the node-re2 module to handle your regexps.
-And particularly complicated regexps are not supported by node-re2.
+다른 접근법으로는 다른 정규 표현식 엔진을 사용하는 것입니다.
+예를 들어, 구글의 빠른 [RE2](https://github.com/google/re2) 정규 표현식 엔진을 사용하는 [node-re2](https://github.com/uhop/node-re2) 모듈을 사용할 수 있습니다.
+하지만 RE2는 V8의 정규 표현식과 100% 호환되지 않으므로, node-re2 모듈을 사용하기 전에 회귀 테스트를 수행해야 합니다.
+특히 복잡한 정규 표현식은 node-re2에서 지원되지 않을 수 있습니다.
 
-If you're trying to match something "obvious", like a URL or a file path, find an example in a [regexp library](http://www.regexlib.com) or use an npm module, e.g. [ip-regex](https://www.npmjs.com/package/ip-regex).
+URL이나 파일 경로와 같이 "명백한" 것을 매칭하려는 경우, [정규 표현식 라이브러리](http://www.regexlib.com)에서 예제를 찾거나
+[ip-regex](https://www.npmjs.com/package/ip-regex)와 같은 npm 모듈을 사용하는 것을 고려하세요.
 
-### Blocking the Event Loop: Node.js core modules
+### 이벤트 루프 차단: Node.js 코어 모듈
 
-Several Node.js core modules have synchronous expensive APIs, including:
+여러 Node.js 코어 모듈은 동기적이고 비용이 많이 드는 API를 제공합니다. 예를 들어:
 
 - [Encryption](https://nodejs.org/api/crypto.html)
 - [Compression](https://nodejs.org/api/zlib.html)
 - [File system](https://nodejs.org/api/fs.html)
 - [Child process](https://nodejs.org/api/child_process.html)
 
-These APIs are expensive, because they involve significant computation (encryption, compression), require I/O (file I/O), or potentially both (child process). These APIs are intended for scripting convenience, but are not intended for use in the server context. If you execute them on the Event Loop, they will take far longer to complete than a typical JavaScript instruction, blocking the Event Loop.
+이 API들은 많은 계산(암호화, 압축) 또는 I/O(파일 I/O)가 필요하거나, 두 가지를 모두 포함하기 때문에 비용이 많이 듭니다.
+이 API들은 스크립트 작성을 편리하게 하기 위해 제공되었지만, 서버 컨텍스트에서 사용하도록 설계되지 않았습니다.
+이벤트 루프에서 이러한 API를 실행하면, 일반적인 JavaScript 명령보다 완료하는 데 훨씬 더 오래 걸리며 이벤트 루프를 차단합니다.
 
-In a server, _you should not use the following synchronous APIs from these modules_:
+서버에서는, _다음의 동기 API를 사용하지 말아야 합니다:_
 
-- Encryption:
-  - `crypto.randomBytes` (synchronous version)
+- 암호화:
+  - `crypto.randomBytes` (동기 버전)
   - `crypto.randomFillSync`
   - `crypto.pbkdf2Sync`
-  - You should also be careful about providing large input to the encryption and decryption routines.
-- Compression:
+  - 암호화 및 복호화 루틴에 큰 입력값을 제공하지 않도록 주의해야 합니다.
+- 압축:
   - `zlib.inflateSync`
   - `zlib.deflateSync`
-- File system:
-  - Do not use the synchronous file system APIs. For example, if the file you access is in a [distributed file system](https://en.wikipedia.org/wiki/Clustered_file_system#Distributed_file_systems) like [NFS](https://en.wikipedia.org/wiki/Network_File_System), access times can vary widely.
-- Child process:
+- 파일 시스템:
+  - 동기 파일 시스템 API를 사용하지 마세요. 예를 들어, [분산 파일 시스템](https://en.wikipedia.org/wiki/Clustered_file_system#Distributed_file_systems)인 [NFS](https://en.wikipedia.org/wiki/Network_File_System)에서 파일을 액세스하는 경우, 액세스 시간이 크게 달라질 수 있습니다.
+- 자식 프로세스:
   - `child_process.spawnSync`
   - `child_process.execSync`
   - `child_process.execFileSync`
 
-This list is reasonably complete as of Node.js v9.
+이 목록은 Node.js v9 기준으로 비교적 완전한 목록입니다.
 
-### Blocking the Event Loop: JSON DOS
+### 이벤트 루프 차단: JSON DOS
 
-`JSON.parse` and `JSON.stringify` are other potentially expensive operations.
-While these are `O(n)` in the length of the input, for large `n` they can take surprisingly long.
+`JSON.parse`와 `JSON.stringify`는 잠재적으로 비용이 많이 드는 작업입니다.
+이들은 입력 길이에 대해 `O(n)` 복잡도를 가지지만, 큰 `n`에 대해 놀라울 정도로 오래 걸릴 수 있습니다.
 
-If your server manipulates JSON objects, particularly those from a client, you should be cautious about the size of the objects or strings you work with on the Event Loop.
+서버가 JSON 객체, 특히 클라이언트로부터 전달된 JSON 객체를 조작하는 경우, 이벤트 루프에서 작업하는 객체 또는 문자열 크기에 대해 주의해야 합니다.
 
-Example: JSON blocking. We create an object `obj` of size 2^21 and `JSON.stringify` it, run `indexOf` on the string, and then JSON.parse it. The `JSON.stringify`'d string is 50MB. It takes 0.7 seconds to stringify the object, 0.03 seconds to indexOf on the 50MB string, and 1.3 seconds to parse the string.
+#### JSON 차단 예제
+
+다음은 크기 2^21의 객체를 생성하여 `JSON.stringify`하고, 문자열에서 `indexOf`를 실행한 뒤, JSON을 다시 구문 분석하는 예제입니다.
+`JSON.stringify`된 문자열은 50MB 크기입니다.
+객체를 문자열화하는 데 0.7초, 문자열에서 `indexOf`를 실행하는 데 0.03초, 구문 분석하는 데 1.3초가 걸립니다.
 
 ```js
 let obj = { a: 1 };
@@ -277,7 +290,7 @@ let niter = 20;
 let before, str, pos, res, took;
 
 for (let i = 0; i < niter; i++) {
-  obj = { obj1: obj, obj2: obj }; // Doubles in size each iter
+  obj = { obj1: obj, obj2: obj }; // 각 반복마다 크기가 두 배로 증가
 }
 
 before = process.hrtime();
@@ -296,24 +309,22 @@ took = process.hrtime(before);
 console.log('JSON.parse took ' + took);
 ```
 
-There are npm modules that offer asynchronous JSON APIs. See for example:
+비동기 JSON API를 제공하는 npm 모듈이 있습니다. 예를 들어:
 
-- [JSONStream](https://www.npmjs.com/package/JSONStream), which has stream APIs.
-- [Big-Friendly JSON](https://www.npmjs.com/package/bfj), which has stream APIs as well as asynchronous versions of the standard JSON APIs using the partitioning-on-the-Event-Loop paradigm outlined below.
+- [JSONStream](https://www.npmjs.com/package/JSONStream): 스트림 API를 제공합니다.
+- [Big-Friendly JSON](https://www.npmjs.com/package/bfj): 스트림 API와 함께, 아래에 설명된 이벤트 루프 분할 패러다임을 사용하는 표준 JSON API의 비동기 버전을 제공합니다.
 
-### Complex calculations without blocking the Event Loop
+### 복잡한 계산을 이벤트 루프를 차단하지 않고 처리하기
 
-Suppose you want to do complex calculations in JavaScript without blocking the Event Loop.
-You have two options: partitioning or offloading.
+JavaScript에서 복잡한 계산을 수행해야 하지만 이벤트 루프를 차단하지 않으려면 두 가지 옵션이 있습니다: 분할(partitioning) 또는 오프로딩(offloading)입니다.
 
-#### Partitioning
+#### 분할 (Partitioning)
 
-You could _partition_ your calculations so that each runs on the Event Loop but regularly yields (gives turns to) other pending events.
-In JavaScript it's easy to save the state of an ongoing task in a closure, as shown in example 2 below.
+계산 작업을 분할하여 각 작업이 이벤트 루프에서 실행되도록 하고, 주기적으로 다른 대기 중인 이벤트에 실행 기회를 양보할 수 있습니다. JavaScript에서는 클로저를 사용하여 진행 중인 작업의 상태를 쉽게 저장할 수 있습니다. 아래의 예제 2에서 이를 확인할 수 있습니다.
 
-For a simple example, suppose you want to compute the average of the numbers `1` to `n`.
+간단한 예로, 숫자 `1`에서 `n`까지의 평균을 계산한다고 가정해 보겠습니다.
 
-Example 1: Un-partitioned average, costs `O(n)`
+예제 1: 분할되지 않은 평균 계산, `O(n)`의 비용 발생
 
 ```js
 for (let i = 0; i < n; i++) sum += i;
@@ -321,11 +332,11 @@ let avg = sum / n;
 console.log('avg: ' + avg);
 ```
 
-Example 2: Partitioned average, each of the `n` asynchronous steps costs `O(1)`.
+예제 2: 분할된 평균 계산, `n`개의 비동기 단계 각각의 비용은 `O(1)`입니다.
 
 ```js
 function asyncAvg(n, avgCB) {
-  // Save ongoing sum in JS closure.
+  // 진행 중인 합계를 클로저에 저장합니다.
   let sum = 0;
   function help(i, cb) {
     sum += i;
@@ -334,12 +345,12 @@ function asyncAvg(n, avgCB) {
       return;
     }
 
-    // "Asynchronous recursion".
-    // Schedule next operation asynchronously.
+    // "비동기 재귀".
+    // 다음 작업을 비동기적으로 예약합니다.
     setImmediate(help.bind(null, i + 1, cb));
   }
 
-  // Start the helper, with CB to call avgCB.
+  // 헬퍼를 시작하고, avgCB를 호출합니다.
   help(1, function (sum) {
     let avg = sum / n;
     avgCB(avg);
@@ -347,169 +358,156 @@ function asyncAvg(n, avgCB) {
 }
 
 asyncAvg(n, function (avg) {
-  console.log('avg of 1-n: ' + avg);
+  console.log('1부터 n까지의 평균: ' + avg);
 });
 ```
 
-You can apply this principle to array iterations and so forth.
+이 원칙은 배열 반복 등에도 적용할 수 있습니다.
 
-#### Offloading
+#### 오프로딩 (Offloading)
 
-If you need to do something more complex, partitioning is not a good option.
-This is because partitioning uses only the Event Loop, and you won't benefit from multiple cores almost certainly available on your machine.
-_Remember, the Event Loop should orchestrate client requests, not fulfill them itself._
-For a complicated task, move the work off of the Event Loop onto a Worker Pool.
+보다 복잡한 작업이 필요한 경우, 분할은 적합하지 않을 수 있습니다. 이는 분할이 이벤트 루프만 사용하기 때문이며, 사용 가능한 여러 코어를 활용하지 못할 가능성이 높습니다.  
+_기억하세요: 이벤트 루프는 클라이언트 요청을 조정해야 하며, 직접 처리하지 않아야 합니다._  
+복잡한 작업의 경우, 작업을 이벤트 루프에서 워커 풀로 이동하는 것이 좋습니다.
 
-##### How to offload
+##### 오프로딩 방법
 
-You have two options for a destination Worker Pool to which to offload work.
+작업을 오프로딩하기 위한 대상 워커 풀로 다음 두 가지 옵션이 있습니다.
 
-1. You can use the built-in Node.js Worker Pool by developing a [C++ addon](https://nodejs.org/api/addons.html). On older versions of Node, build your C++ addon using [NAN](https://github.com/nodejs/nan), and on newer versions use [N-API](https://nodejs.org/api/n-api.html). [node-webworker-threads](https://www.npmjs.com/package/webworker-threads) offers a JavaScript-only way to access the Node.js Worker Pool.
-2. You can create and manage your own Worker Pool dedicated to computation rather than the Node.js I/O-themed Worker Pool. The most straightforward ways to do this is using [Child Process](https://nodejs.org/api/child_process.html) or [Cluster](https://nodejs.org/api/cluster.html).
+1. Node.js 기본 제공 워커 풀을 사용하여 [C++ 애드온](https://nodejs.org/api/addons.html)을 개발할 수 있습니다. 이전 버전의 Node.js에서는 [NAN](https://github.com/nodejs/nan)을 사용하여 C++ 애드온을 빌드하고, 최신 버전에서는 [N-API](https://nodejs.org/api/n-api.html)를 사용합니다. [node-webworker-threads](https://www.npmjs.com/package/webworker-threads)는 Node.js 워커 풀에 액세스할 수 있는 JavaScript 전용 방법을 제공합니다.
+2. Node.js의 I/O 중심 워커 풀이 아닌 계산 전용 워커 풀을 생성하고 관리할 수 있습니다. 이를 구현하는 가장 간단한 방법은 [Child Process](https://nodejs.org/api/child_process.html)나 [Cluster](https://nodejs.org/api/cluster.html)를 사용하는 것입니다.
 
-You should _not_ simply create a [Child Process](https://nodejs.org/api/child_process.html) for every client.
-You can receive client requests more quickly than you can create and manage children, and your server might become a [fork bomb](https://en.wikipedia.org/wiki/Fork_bomb).
+각 클라이언트에 대해 단순히 [Child Process](https://nodejs.org/api/child_process.html)를 생성하면 안 됩니다.  
+클라이언트 요청을 처리하는 속도가 자식 프로세스를 생성하고 관리하는 속도보다 빠를 수 있으며, 서버가 [fork 폭탄](https://en.wikipedia.org/wiki/Fork_bomb)이 될 수 있습니다.
 
-##### Downside of offloading
+##### 오프로딩의 단점
 
-The downside of the offloading approach is that it incurs overhead in the form of _communication costs_.
-Only the Event Loop is allowed to see the "namespace" (JavaScript state) of your application.
-From a Worker, you cannot manipulate a JavaScript object in the Event Loop's namespace.
-Instead, you have to serialize and deserialize any objects you wish to share.
-Then the Worker can operate on its own copy of these object(s) and return the modified object (or a "patch") to the Event Loop.
+오프로딩 접근 방식의 단점은 *통신 비용*이라는 형태의 오버헤드가 발생한다는 점입니다.  
+이벤트 루프만 애플리케이션의 "네임스페이스"(JavaScript 상태)를 볼 수 있습니다. 워커에서는 이벤트 루프 네임스페이스의 JavaScript 객체를 조작할 수 없습니다. 대신, 공유하려는 객체를 직렬화하고 역직렬화해야 합니다. 그런 다음 워커는 이러한 객체의 자체 복사본에서 작업을 수행하고 수정된 객체(또는 "패치")를 이벤트 루프로 반환할 수 있습니다.
 
-For serialization concerns, see the section on JSON DOS.
+직렬화 관련 사항은 JSON DOS 섹션을 참조하세요.
 
-##### Some suggestions for offloading
+##### 오프로딩 관련 제안
 
-You may wish to distinguish between CPU-intensive and I/O-intensive tasks because they have markedly different characteristics.
+CPU 집약적인 작업과 I/O 집약적인 작업을 구분하는 것이 좋습니다. 이 두 작업은 특성이 상당히 다릅니다.
 
-A CPU-intensive task only makes progress when its Worker is scheduled, and the Worker must be scheduled onto one of your machine's [logical cores](https://nodejs.org/api/os.html#os_os_cpus).
-If you have 4 logical cores and 5 Workers, one of these Workers cannot make progress.
-As a result, you are paying overhead (memory and scheduling costs) for this Worker and getting no return for it.
+- **CPU 집약적인 작업**은 워커가 스케줄링될 때만 진행되며, 워커는 사용 중인 머신의 [논리적 코어](https://nodejs.org/api/os.html#os_os_cpus) 중 하나에 스케줄링되어야 합니다.
+- **I/O 집약적인 작업**은 외부 서비스 제공자(DNS, 파일 시스템 등)에 요청을 보내고 응답을 기다리는 작업입니다. 이러한 작업은 스레드가 실행되지 않는 동안에도 진전을 이루며, 워커가 대기 중인 동안 다른 작업을 수행할 수 있습니다.
 
-I/O-intensive tasks involve querying an external service provider (DNS, file system, etc.) and waiting for its response.
-While a Worker with an I/O-intensive task is waiting for its response, it has nothing else to do and can be de-scheduled by the operating system, giving another Worker a chance to submit their request.
-Thus, _I/O-intensive tasks will be making progress even while the associated thread is not running_.
-External service providers like databases and file systems have been highly optimized to handle many pending requests concurrently.
-For example, a file system will examine a large set of pending write and read requests to merge conflicting updates and to retrieve files in an optimal order.
+성능을 최적화하려면 CPU 중심과 I/O 중심 작업에 대해 별도의 계산 워커 풀을 유지하는 것이 좋습니다.
 
-If you rely on only one Worker Pool, e.g. the Node.js Worker Pool, then the differing characteristics of CPU-bound and I/O-bound work may harm your application's performance.
+#### Offloading: 결론
 
-For this reason, you might wish to maintain a separate Computation Worker Pool.
+간단한 작업(예: 임의로 긴 배열 요소를 반복)에는 작업 분할이 좋은 옵션일 수 있습니다.
+더 복잡한 계산의 경우, 오프로드가 더 나은 접근 방식입니다. 즉, Event Loop와 Worker Pool 간에 직렬화된 객체를 전달하는 통신 비용(오버헤드)은 여러 코어를 사용하는 이점으로 상쇄됩니다.
 
-#### Offloading: conclusions
+하지만 서버가 복잡한 계산에 크게 의존하는 경우, Node.js가 정말 적합한지 고민해보아야 합니다. Node.js는 I/O 기반 작업에서 뛰어나지만, 비용이 많이 드는 계산에는 최선의 선택이 아닐 수 있습니다.
 
-For simple tasks, like iterating over the elements of an arbitrarily long array, partitioning might be a good option.
-If your computation is more complex, offloading is a better approach: the communication costs, i.e. the overhead of passing serialized objects between the Event Loop and the Worker Pool, are offset by the benefit of using multiple cores.
+오프로드 접근 방식을 사용하는 경우, Worker Pool을 차단하지 않는 방법에 대한 섹션을 참조하세요.
 
-However, if your server relies heavily on complex calculations, you should think about whether Node.js is really a good fit. Node.js excels for I/O-bound work, but for expensive computation it might not be the best option.
+## Worker Pool 차단을 피하세요
 
-If you take the offloading approach, see the section on not blocking the Worker Pool.
+Node.js에는 `k` 개의 Worker로 구성된 Worker Pool이 있습니다.
+위에서 논의한 오프로드 패러다임을 사용하는 경우, 별도의 계산 전용 Worker Pool을 가질 수 있으며, 동일한 원칙이 적용됩니다.
+어느 경우든, `k`가 동시에 처리할 수 있는 클라이언트의 수보다 훨씬 적다고 가정해야 합니다.
+이는 "하나의 스레드로 여러 클라이언트를 처리"하는 Node.js의 철학과 일치하며, 이것이 확장성의 비결입니다.
 
-## Don't block the Worker Pool
+앞서 논의한 것처럼, 각 Worker는 현재 작업을 완료한 후 Worker Pool 큐의 다음 작업을 진행합니다.
 
-Node.js has a Worker Pool composed of `k` Workers.
-If you are using the Offloading paradigm discussed above, you might have a separate Computational Worker Pool, to which the same principles apply.
-In either case, let us assume that `k` is much smaller than the number of clients you might be handling concurrently.
-This is in keeping with the "one thread for many clients" philosophy of Node.js, the secret to its scalability.
+이제, 클라이언트 요청을 처리하는 데 필요한 작업의 비용에는 차이가 있을 것입니다.
+일부 작업은 빠르게 완료됩니다(예: 짧거나 캐시된 파일 읽기, 소량의 임의 바이트 생성), 반면 다른 작업은 더 오래 걸립니다(예: 더 크거나 캐시되지 않은 파일 읽기, 더 많은 임의 바이트 생성).
+목표는 작업 시간의 변동성을 *최소화*하고, 이를 위해 *작업 분할*을 사용해야 합니다.
 
-As discussed above, each Worker completes its current Task before proceeding to the next one on the Worker Pool queue.
+### 작업 시간의 변동성 최소화
 
-Now, there will be variation in the cost of the Tasks required to handle your clients' requests.
-Some Tasks can be completed quickly (e.g. reading short or cached files, or producing a small number of random bytes), and others will take longer (e.g reading larger or uncached files, or generating more random bytes).
-Your goal should be to _minimize the variation in Task times_, and you should use _Task partitioning_ to accomplish this.
+Worker의 현재 작업이 다른 작업보다 훨씬 비용이 많이 들면, 해당 작업이 완료될 때까지 다른 대기 작업을 처리할 수 없습니다.
+즉, _비교적 긴 작업 하나가 완료될 때까지 Worker Pool의 크기가 효과적으로 하나 감소하게 됩니다_.
+이는 바람직하지 않습니다. Worker Pool 내의 Worker 수가 많을수록 Worker Pool 처리량(초당 작업 수) 및 서버 처리량(초당 클라이언트 요청 수)이 더 커지기 때문입니다.
+비교적 비용이 많이 드는 작업을 처리하는 클라이언트는 Worker Pool의 처리량을 줄이고, 결과적으로 서버의 처리량을 감소시킬 수 있습니다.
 
-### Minimizing the variation in Task times
+이를 방지하려면 Worker Pool에 제출하는 작업의 길이 변동성을 최소화해야 합니다.
+I/O 요청(DB, FS 등)으로 액세스하는 외부 시스템을 블랙 박스로 취급하는 것이 적절하지만, 이러한 I/O 요청의 상대적 비용을 인지하고, 특히 긴 요청 제출을 피해야 합니다.
 
-If a Worker's current Task is much more expensive than other Tasks, then it will be unavailable to work on other pending Tasks.
-In other words, _each relatively long Task effectively decreases the size of the Worker Pool by one until it is completed_.
-This is undesirable because, up to a point, the more Workers in the Worker Pool, the greater the Worker Pool throughput (tasks/second) and thus the greater the server throughput (client requests/second).
-One client with a relatively expensive Task will decrease the throughput of the Worker Pool, in turn decreasing the throughput of the server.
+작업 시간 변동성의 두 가지 예시를 살펴보겠습니다.
 
-To avoid this, you should try to minimize variation in the length of Tasks you submit to the Worker Pool.
-While it is appropriate to treat the external systems accessed by your I/O requests (DB, FS, etc.) as black boxes, you should be aware of the relative cost of these I/O requests, and should avoid submitting requests you can expect to be particularly long.
+#### 변동성 예: 장시간 실행되는 파일 시스템 읽기
 
-Two examples should illustrate the possible variation in task times.
+서버가 일부 클라이언트 요청을 처리하기 위해 파일을 읽어야 한다고 가정합니다.
+Node.js [파일 시스템](https://nodejs.org/api/fs.html) API를 참고한 후, 간단함 때문에 `fs.readFile()`을 사용하기로 결정했다고 가정합니다.
+하지만, `fs.readFile()`은 ([현재로서는](https://github.com/nodejs/node/pull/17054)) 작업을 분할하지 않습니다. 전체 파일을 대상으로 단일 `fs.read()` 작업을 제출합니다.
+일부 사용자를 위해 짧은 파일을 읽고 다른 사용자를 위해 긴 파일을 읽는 경우, `fs.readFile()`은 Worker Pool 처리량에 해로운 작업 길이의 상당한 변동을 초래할 수 있습니다.
 
-#### Variation example: Long-running file system reads
+최악의 경우, 공격자가 서버가 _임의_ 파일을 읽도록 설득할 수 있다고 가정합니다(이는 [디렉터리 트래버설 취약성](https://www.owasp.org/index.php/Path_Traversal)입니다).
+서버가 Linux에서 실행 중인 경우, 공격자는 극히 느린 파일(`/dev/random`)을 지정할 수 있습니다.
+사실상, `/dev/random`은 무한히 느리며, `/dev/random`에서 읽기를 시도한 모든 Worker는 해당 작업을 결코 완료하지 못할 것입니다.
+공격자는 `k`개의 요청을 제출하여 각 Worker에 할당되도록 한 뒤, Worker Pool을 사용하는 다른 클라이언트 요청이 진행되지 못하게 할 수 있습니다.
 
-Suppose your server must read files in order to handle some client requests.
-After consulting the Node.js [File system](https://nodejs.org/api/fs.html) APIs, you opted to use `fs.readFile()` for simplicity.
-However, `fs.readFile()` is ([currently](https://github.com/nodejs/node/pull/17054)) not partitioned: it submits a single `fs.read()` Task spanning the entire file.
-If you read shorter files for some users and longer files for others, `fs.readFile()` may introduce significant variation in Task lengths, to the detriment of Worker Pool throughput.
+#### 변동성 예: 장시간 실행되는 암호화 작업
 
-For a worst-case scenario, suppose an attacker can convince your server to read an _arbitrary_ file (this is a [directory traversal vulnerability](https://www.owasp.org/index.php/Path_Traversal)).
-If your server is running Linux, the attacker can name an extremely slow file: [`/dev/random`](http://man7.org/linux/man-pages/man4/random.4.html).
-For all practical purposes, `/dev/random` is infinitely slow, and every Worker asked to read from `/dev/random` will never finish that Task.
-An attacker then submits `k` requests, one for each Worker, and no other client requests that use the Worker Pool will make progress.
+서버가 [`crypto.randomBytes()`](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback)를 사용하여 암호화 보안 임의 바이트를 생성한다고 가정합니다.
+`crypto.randomBytes()`는 작업을 분할하지 않습니다. 요청된 바이트 수를 생성하는 단일 `randomBytes()` 작업을 만듭니다.
+일부 사용자에게 더 적은 바이트를 생성하고 다른 사용자에게 더 많은 바이트를 생성하는 경우, `crypto.randomBytes()`는 작업 길이의 또 다른 변동 요인이 될 수 있습니다.
 
-#### Variation example: Long-running crypto operations
+### 작업 분할(Task partitioning)
 
-Suppose your server generates cryptographically secure random bytes using [`crypto.randomBytes()`](https://nodejs.org/api/crypto.html#crypto_crypto_randombytes_size_callback).
-`crypto.randomBytes()` is not partitioned: it creates a single `randomBytes()` Task to generate as many bytes as you requested.
-If you create fewer bytes for some users and more bytes for others, `crypto.randomBytes()` is another source of variation in Task lengths.
+작업의 가변적인 시간 비용은 워커 풀의 처리량에 영향을 미칠 수 있습니다.
+작업 시간 변동을 최소화하려면 가능한 한 각 작업을 유사한 비용의 하위 작업으로 *분할*해야 합니다.
+각 하위 작업이 완료되면 다음 하위 작업을 제출하고, 최종 하위 작업이 완료되면 제출자에게 알립니다.
 
-### Task partitioning
+`fs.readFile()` 예제를 계속 사용하여, 대신에 `fs.read()`(수동 분할) 또는 `ReadStream`(자동 분할)을 사용해야 합니다.
 
-Tasks with variable time costs can harm the throughput of the Worker Pool.
-To minimize variation in Task times, as far as possible you should _partition_ each Task into comparable-cost sub-Tasks.
-When each sub-Task completes it should submit the next sub-Task, and when the final sub-Task completes it should notify the submitter.
+같은 원칙이 CPU 바운드 작업에도 적용됩니다. `asyncAvg` 예제가 이벤트 루프에는 부적합할 수 있지만, 워커 풀에는 적합합니다.
 
-To continue the `fs.readFile()` example, you should instead use `fs.read()` (manual partitioning) or `ReadStream` (automatically partitioned).
+작업을 하위 작업으로 분할하면 더 짧은 작업은 소수의 하위 작업으로 확장되고, 더 긴 작업은 더 많은 하위 작업으로 확장됩니다.
+더 긴 작업의 각 하위 작업 사이에서 할당된 워커는 더 짧은 작업의 다른 하위 작업을 수행할 수 있으므로 워커 풀의 전체 작업 처리량이 개선됩니다.
 
-The same principle applies to CPU-bound tasks; the `asyncAvg` example might be inappropriate for the Event Loop, but it is well suited to the Worker Pool.
+완료된 하위 작업의 수는 워커 풀 처리량의 유용한 척도가 아님을 유념하십시오.
+대신에 완료된 _작업_ 수에 관심을 가지세요.
 
-When you partition a Task into sub-Tasks, shorter Tasks expand into a small number of sub-Tasks, and longer Tasks expand into a larger number of sub-Tasks.
-Between each sub-Task of a longer Task, the Worker to which it was assigned can work on a sub-Task from another, shorter, Task, thus improving the overall Task throughput of the Worker Pool.
+### 작업 분할 피하기
 
-Note that the number of sub-Tasks completed is not a useful metric for the throughput of the Worker Pool.
-Instead, concern yourself with the number of _Tasks_ completed.
+작업 분할의 목적은 작업 시간의 변동을 최소화하는 것입니다.
+짧은 작업과 긴 작업(예: 배열의 합산 vs. 배열 정렬)을 구별할 수 있다면, 각 작업 클래스에 하나의 워커 풀을 생성할 수 있습니다.
+짧은 작업과 긴 작업을 별도의 워커 풀로 라우팅하는 것도 작업 시간 변동을 최소화하는 또 다른 방법입니다.
 
-### Avoiding Task partitioning
+이 접근법을 선택하면 작업 분할의 오버헤드(워커 풀 작업 표현을 생성하고 워커 풀 대기를 조작하는 비용)를 피할 수 있습니다.
+또한 추가적인 워커 풀 호출 비용을 절감할 수 있으며, 작업 분할에서 실수를 저지르지 않을 수 있습니다.
 
-Recall that the purpose of Task partitioning is to minimize the variation in Task times.
-If you can distinguish between shorter Tasks and longer Tasks (e.g. summing an array vs. sorting an array), you could create one Worker Pool for each class of Task.
-Routing shorter Tasks and longer Tasks to separate Worker Pools is another way to minimize Task time variation.
+이 접근법의 단점은 이러한 모든 워커 풀의 워커들이 공간 및 시간 오버헤드를 초래하고 CPU 시간을 두고 경쟁한다는 점입니다.
+각 CPU 바운드 작업은 스케줄링되어야만 진행될 수 있음을 기억하세요.
+결과적으로, 이 접근법은 신중한 분석 후에만 고려해야 합니다.
 
-In favor of this approach, partitioning Tasks incurs overhead (the costs of creating a Worker Pool Task representation and of manipulating the Worker Pool queue), and avoiding partitioning saves you the costs of additional trips to the Worker Pool.
-It also keeps you from making mistakes in partitioning your Tasks.
+### 워커 풀: 결론
 
-The downside of this approach is that Workers in all of these Worker Pools will incur space and time overheads and will compete with each other for CPU time.
-Remember that each CPU-bound Task makes progress only while it is scheduled.
-As a result, you should only consider this approach after careful analysis.
+Node.js 워커 풀만 사용하든 별도의 워커 풀을 유지하든, 워커 풀의 작업 처리량을 최적화해야 합니다.
 
-### Worker Pool: conclusions
+이를 위해 작업 분할을 사용하여 작업 시간의 변동을 최소화하세요.
 
-Whether you use only the Node.js Worker Pool or maintain separate Worker Pool(s), you should optimize the Task throughput of your Pool(s).
+## npm 모듈의 위험성
 
-To do this, minimize the variation in Task times by using Task partitioning.
+Node.js 핵심 모듈은 다양한 응용 프로그램을 위한 빌딩 블록을 제공하지만, 때로는 추가적인 기능이 필요합니다. Node.js 개발자는 [npm 생태계](https://www.npmjs.com/)의 혜택을 크게 누립니다. 이 생태계에는 개발 프로세스를 가속화하는 기능을 제공하는 수십만 개의 모듈이 포함되어 있습니다.
 
-## The risks of npm modules
+하지만, 이러한 모듈의 대부분은 서드파티 개발자가 작성하며 일반적으로 최선의 노력 보장을 통해 제공됩니다. npm 모듈을 사용하는 개발자는 두 가지 사항을 염두에 두어야 하며, 후자는 종종 간과됩니다.
 
-While the Node.js core modules offer building blocks for a wide variety of applications, sometimes something more is needed. Node.js developers benefit tremendously from the [npm ecosystem](https://www.npmjs.com/), with hundreds of thousands of modules offering functionality to accelerate your development process.
+1. API를 준수하는가?
+2. API가 이벤트 루프 또는 워커를 차단할 가능성이 있는가?
+   많은 모듈이 API의 비용을 명시하려는 노력을 기울이지 않으며, 이는 커뮤니티에 해를 끼칩니다.
 
-Remember, however, that the majority of these modules are written by third-party developers and are generally released with only best-effort guarantees. A developer using an npm module should be concerned about two things, though the latter is frequently forgotten.
+간단한 API의 경우 API의 비용을 추정할 수 있습니다. 예를 들어 문자열 조작 비용은 추측하기 어렵지 않습니다.
+그러나 많은 경우 API가 얼마나 비용이 들지 명확하지 않습니다.
 
-1. Does it honor its APIs?
-2. Might its APIs block the Event Loop or a Worker?
-   Many modules make no effort to indicate the cost of their APIs, to the detriment of the community.
+_비용이 많이 들 수 있는 API를 호출하는 경우, 비용을 이중으로 확인하세요. 개발자에게 문서화를 요청하거나, 소스 코드를 직접 검토하고 (가능하다면 비용을 문서화하는 PR을 제출하세요)._
 
-For simple APIs you can estimate the cost of the APIs; the cost of string manipulation isn't hard to fathom.
-But in many cases it's unclear how much an API might cost.
+API가 비동기적이라고 하더라도 각 분할에서 워커나 이벤트 루프에 얼마나 오랜 시간을 소비할지 알 수 없습니다.
+예를 들어, 위의 `asyncAvg` 예제에서 각 헬퍼 함수 호출이 숫자 하나가 아닌 *절반*을 합산한다고 가정해보세요.
+이 함수는 여전히 비동기적이겠지만, 각 분할의 비용은 `O(1)`이 아닌 `O(n)`이 되어, 임의의 `n` 값에 대해 사용하기 훨씬 안전하지 않게 됩니다.
 
-_If you are calling an API that might do something expensive, double-check the cost. Ask the developers to document it, or examine the source code yourself (and submit a PR documenting the cost)._
+## 결론
 
-Remember, even if the API is asynchronous, you don't know how much time it might spend on a Worker or on the Event Loop in each of its partitions.
-For example, suppose in the `asyncAvg` example given above, each call to the helper function summed _half_ of the numbers rather than one of them.
-Then this function would still be asynchronous, but the cost of each partition would be `O(n)`, not `O(1)`, making it much less safe to use for arbitrary values of `n`.
+Node.js에는 두 가지 유형의 스레드가 있습니다: 하나의 이벤트 루프와 `k`개의 워커.
+이벤트 루프는 JavaScript 콜백과 비차단 I/O를 담당하며, 워커는 비동기 요청을 완료하는 C++ 코드에 해당하는 작업(차단 I/O 및 CPU 집약적 작업 포함)을 실행합니다.
+두 유형의 스레드는 한 번에 하나의 활동만 작업할 수 있습니다.
+콜백이나 작업이 오래 걸리면 이를 실행하는 스레드는 *차단*됩니다.
+응용 프로그램이 차단 콜백이나 작업을 만들면 최악의 경우 처리량(클라이언트/초)이 저하되거나 서비스가 완전히 중단될 수 있습니다.
 
-## Conclusion
-
-Node.js has two types of threads: one Event Loop and `k` Workers.
-The Event Loop is responsible for JavaScript callbacks and non-blocking I/O, and a Worker executes tasks corresponding to C++ code that completes an asynchronous request, including blocking I/O and CPU-intensive work.
-Both types of threads work on no more than one activity at a time.
-If any callback or task takes a long time, the thread running it becomes _blocked_.
-If your application makes blocking callbacks or tasks, this can lead to degraded throughput (clients/second) at best, and complete denial of service at worst.
-
-To write a high-throughput, more DoS-proof web server, you must ensure that on benign and on malicious input, neither your Event Loop nor your Workers will block.
+더 높은 처리량의, DoS 방지 웹 서버를 작성하려면, 정상 입력과 악의적인 입력 모두에서 이벤트 루프나 워커가 차단되지 않도록 해야 합니다.
