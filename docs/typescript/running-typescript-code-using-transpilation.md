@@ -1,18 +1,21 @@
 ---
-title: Running TypeScript code using transpilation
+title: TypeScript 코드 사용하기
 layout: learn
 authors: AugustinMauroy
 ---
 
-# Running TypeScript code using transpilation
+# TypeScript 코드 사용하기
+> ❗️ *번역 날짜: 2024년 12월 16일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Running TypeScript code using transpilation](https://nodejs.org/en/learn/typescript/transpile#running-typescript-code-using-transpilation)
 
-Transpilation is the process of converting source code from one language to another. In the case of TypeScript, it's the process of converting TypeScript code to JavaScript code. This is necessary because browsers and Node.js can't run TypeScript code directly.
+Transpilation은 소스 코드를 한 언어에서 다른 언어로 변환하는 과정입니다. TypeScript의 경우, TypeScript 코드를 JavaScript 코드로 변환하는 과정입니다. 이는 브라우저와 Node.js가 TypeScript 코드를 직접 실행할 수 없기 때문입니다.
 
-## Compiling TypeScript to JavaScript
+## TypeScript 코드를 JavaScript로 컴파일하기
 
-The most common way to run TypeScript code is to compile it to JavaScript first. You can do this using the TypeScript compiler `tsc`.
+TypeScript 코드를 실행하는 가장 일반적인 방법은 먼저 JavaScript로 컴파일하는 것입니다. 이를 위해 TypeScript 컴파일러 `tsc`를 사용할 수 있습니다.
 
-**Step 1:** Write your TypeScript code in a file, for example `example.ts`.
+**Step 1:** `example.ts`라는 파일에 TypeScript 코드를 작성합니다.
 
 <!--
   Maintainers note: this code is duplicated in the previous article, please keep them in sync
@@ -36,39 +39,38 @@ const justine = {
 const isJustineAnAdult = isAdult(justine);
 ```
 
-**Step 2:** Install TypeScript locally using a package manager:
+**Step 2:** 패키지 매니저를 사용하여 TypeScript를 로컬에 설치합니다:
 
-In this example we're going to use npm, you can check our [our introduction to the npm package manager](/learn/getting-started/an-introduction-to-the-npm-package-manager) for more information.
+이 예제에서는 npm을 사용하겠습니다. npm에 대한 자세한 내용은 [npm 패키지 매니저 소개][npm 패키지 매니저 소개]를 참고하세요.
 
 ```bash displayName="Install TypeScript locally"
-npm i -D typescript # -D is a shorthand for --save-dev
+npm i -D typescript # -D는 --save-dev의 줄임말입니다.
 ```
 
-**Step 3:** Compile your TypeScript code to JavaScript using the `tsc` command:
+**Step 3:** `tsc` 명령어를 사용하여 TypeScript 코드를 JavaScript로 컴파일합니다:
 
 ```bash
 npx tsc example.ts
 ```
+> **NOTE:** `npx`는 패키지를 전역적으로 설치하지 않고도 Node.js 패키지를 실행할 수 있는 도구입니다.
 
-> **NOTE:** `npx` is a tool that allows you to run Node.js packages without installing them globally.
+`tsc`는 TypeScript 컴파일러로, TypeScript 코드를 JavaScript로 변환합니다.
+이 명령어는 `example.js`라는 새로운 파일을 생성하며, 이를 Node.js로 실행할 수 있습니다.
+이제 TypeScript 코드를 컴파일하고 실행하는 방법을 알았으니, TypeScript의 타입 검사 기능을 살펴보겠습니다!
 
-`tsc` is the TypeScript compiler which will take our TypeScript code and compile it to JavaScript.
-This command will result in a new file named `example.js` that we can run using Node.js.
-Now when we know how to compile and run TypeScript code let's see TypeScript bug-preventing capabilities in action!
-
-**Step 4:** Run your JavaScript code using Node.js:
+**Step 4:** Node.js를 사용하여 JavaScript 코드를 실행합니다:
 
 ```bash
 node example.js
 ```
 
-You should see the output of your TypeScript code in the terminal
+터미널에서 TypeScript 코드의 출력을 확인할 수 있습니다.
 
-## If there are type errors
+## 타입 오류가 있는 경우
 
-If you have type errors in your TypeScript code, the TypeScript compiler will catch them and prevent you from running the code. For example, if you change the `age` property of `justine` to a string, TypeScript will throw an error:
+TypeScript 코드에 타입 오류가 있는 경우, TypeScript 컴파일러는 이를 잡아내고 코드를 실행하지 못하도록 합니다. 예를 들어, `justine`의 `age` 속성을 문자열로 변경하면 TypeScript는 오류를 발생시킵니다:
 
-We will modify our code like this, to voluntarily introduce a type error:
+우리는 이 코드를 다음과 같이 수정하여 의도적으로 타입 오류를 도입할 것입니다:
 
 ```ts
 type User = {
@@ -88,7 +90,7 @@ const justine: User = {
 const isJustineAnAdult: string = isAdult(justine, "I shouldn't be here!");
 ```
 
-And this is what TypeScript has to say about this:
+TypeScript는 이에 대해 다음과 같이 말합니다:
 
 ```console
 example.ts:12:5 - error TS2322: Type 'string' is not assignable to type 'number'.
@@ -115,4 +117,7 @@ example.ts:15:51 - error TS2554: Expected 1 arguments, but got 2.
 Found 3 errors in the same file, starting at: example.ts:12
 ```
 
-As you can see, TypeScript is very helpful in catching bugs before they even happen. This is one of the reasons why TypeScript is so popular among developers.
+TypeScript는 타입 오류를 잡아내기 위해 매우 유용합니다. 이는 TypeScript가 개발자들에게 인기 있는 이유 중 하나입니다.
+
+
+[npm 패키지 매니저 소개]: https://tastekim.gitbook.io/nodejs-ko/learn/getting-started/an-introduction-to-the-npm-package-manager

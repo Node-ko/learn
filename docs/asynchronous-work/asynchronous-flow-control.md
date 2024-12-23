@@ -1,18 +1,21 @@
 ---
-title: Asynchronous flow control
+title: 비동기 흐름 제어
 layout: learn
 authors: aug2uag, ovflowd
 ---
 
-# Asynchronous flow control
+# 비동기 흐름 제어
+> ❗️ *번역 날짜: 2024년 12월 16일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Asynchronous flow control](https://nodejs.org/en/learn/asynchronous-work/asynchronous-flow-control)
 
-> The material in this post is heavily inspired by [Mixu's Node.js Book](http://book.mixu.net/node/ch7.html).
+> 이 글의 자료는 [Mixu의 Node.js 책](http://book.mixu.net/node/ch7.html)에서 많이 영향을 받았습니다.
 
-At its core, JavaScript is designed to be non-blocking on the "main" thread, this is where views are rendered. You can imagine the importance of this in the browser. When the main thread becomes blocked it results in the infamous "freezing" that end users dread, and no other events can be dispatched resulting in the loss of data acquisition, for example.
+JavaScript의 핵심 설계 원칙은 메인 스레드가 멈추지 않는 것입니다. 메인 스레드가 막히면 사용자가 보는 UI가 멈추고, 사용자 입력이나 다른 이벤트들이 처리되지 못해 데이터가 유실될 수 있기 때문입니다.
 
-This creates some unique constraints that only a functional style of programming can cure. This is where callbacks come in to the picture.
+이러한 제약으로 인해 JavaScript에서는 콜백 패턴이라는 독특한 프로그래밍 스타일이 등장하게 되었습니다.
 
-However, callbacks can become challenging to handle in more complicated procedures. This often results in "callback hell" where multiple nested functions with callbacks make the code more challenging to read, debug, organize, etc.
+그러나 콜백 패턴은 복잡한 비동기 로직을 다룰 때 문제가 될 수 있습니다. 특히 여러 콜백이 중첩되면서 발생하는 "콜백 지옥(callback hell)" 현상은 코드의 가독성을 해치고 유지보수와 디버깅을 어렵게 만듭니다.
 
 ```js
 async1(function (input, result1) {
@@ -20,7 +23,7 @@ async1(function (input, result1) {
     async3(function (result3) {
       async4(function (result4) {
         async5(function (output) {
-          // do something with output
+          // output을 사용하여 무언가를 수행합니다
         });
       });
     });
@@ -28,23 +31,23 @@ async1(function (input, result1) {
 });
 ```
 
-Of course, in real life there would most likely be additional lines of code to handle `result1`, `result2`, etc., thus, the length and complexity of this issue usually results in code that looks much more messy than the example above.
+물론, 실제 상황에서는 `result1`, `result2` 등을 처리하기 위한 추가 코드가 있을 것이며, 이는 코드의 길이와 복잡성을 증가시킵니다. 이는 예제보다 훨씬 더 복잡해 보일 것입니다.
 
-**This is where _functions_ come in to great use. More complex operations are made up of many functions:**
+**이런 상황에서 *함수*가 유용하게 사용될 수 있습니다. 복잡한 작업은 여러개의 함수들로 나누어 처리할 수 있습니다:**
 
-1. initiator style / input
-2. middleware
-3. terminator
+1. 시작 함수(initiator style) / 입력
+2. 미들웨어(middleware)
+3. 종료 함수(terminator)
 
-**The "initiator style / input" is the first function in the sequence. This function will accept the original input, if any, for the operation. The operation is an executable series of functions, and the original input will primarily be:**
+**"시작 함수 / 입력"은 순서의 첫 번째 함수입니다. 이 함수는 작업에 대한 원본 입력을 받을 것입니다. 작업은 실행 가능한 함수 시퀀스이며, 원본 입력은 주로 다음과 같습니다:**
 
-1. variables in a global environment
-2. direct invocation with or without arguments
-3. values obtained by file system or network requests
+1. 전역 환경의 변수
+2. 인수 없이 또는 인수와 함께 직접 호출
+3. 파일 시스템 또는 네트워크 요청에서 얻은 값
 
-Network requests can be incoming requests initiated by a foreign network, by another application on the same network, or by the app itself on the same or foreign network.
+네트워크 요청은 외부 네트워크에서 시작된 요청, 같은 네트워크의 다른 애플리케이션에서 시작된 요청, 또는 같은 네트워크의 애플리케이션에서 시작된 요청일 수 있습니다.
 
-A middleware function will return another function, and a terminator function will invoke the callback. The following illustrates the flow to network or file system requests. Here the latency is 0 because all these values are available in memory.
+**"미들웨어"는 다른 함수를 반환하고, "종료 함수"는 콜백을 호출합니다. 다음은 네트워크 또는 파일 시스템 요청의 흐름을 보여줍니다. 여기서 대기 시간은 0입니다. 이 값들은 모두 메모리에 있기 때문입니다.**
 
 ```js
 function final(someInput, callback) {
@@ -59,27 +62,27 @@ function initiate() {
   const someInput = 'hello this is a function ';
   middleware(someInput, function (result) {
     console.log(result);
-    // requires callback to `return` result
+    // 콜백을 통해 결과를 반환합니다
   });
 }
 
 initiate();
 ```
 
-## State management
+## 상태 관리
 
-Functions may or may not be state dependent. State dependency arises when the input or other variable of a function relies on an outside function.
+함수는 상태에 따라 다를 수 있습니다. 상태 의존성은 함수의 입력 또는 다른 변수가 외부 함수에 의존할 때 발생합니다.
 
-**In this way there are two primary strategies for state management:**
+**이러한 상태 관리에는 두 가지 주요 전략이 있습니다:**
 
-1. passing in variables directly to a function, and
-2. acquiring a variable value from a cache, session, file, database, network, or other outside source.
+1. 함수에 변수를 직접 전달하고,
+2. 캐시, 세션, 파일, 데이터베이스, 네트워크 또는 다른 외부 소스에서 변수 값을 얻습니다.
 
-Note, I did not mention global variable. Managing state with global variables is often a sloppy anti-pattern that makes it difficult or impossible to guarantee state. Global variables in complex programs should be avoided when possible.
+참고, 전역 변수를 언급하지 않았습니다. 전역 변수를 사용한 상태 관리는 종종 문제가 되며, 복잡한 프로그램에서는 가능하면 피해야 합니다.
 
-## Control flow
+## 흐름 제어
 
-If an object is available in memory, iteration is possible, and there will not be a change to control flow:
+객체가 메모리에 있으면 반복이 가능하며, 흐름 제어에 변경이 없습니다:
 
 ```js
 function getSong() {
@@ -103,11 +106,11 @@ function singSong(_song) {
 }
 
 const song = getSong();
-// this will work
+// 이 작업은 작동하지 않습니다
 singSong(song);
 ```
 
-However, if the data exists outside of memory the iteration will no longer work:
+데이터가 메모리 외부에 있으면 반복이 더 이상 작동하지 않습니다:
 
 ```js
 function getSong() {
@@ -135,21 +138,21 @@ function singSong(_song) {
 }
 
 const song = getSong('beer');
-// this will not work
+// 이 작업은 작동하지 않습니다
 singSong(song);
 // Uncaught Error: song is '' empty, FEED ME A SONG!
 ```
 
-Why did this happen? `setTimeout` instructs the CPU to store the instructions elsewhere on the bus, and instructs that the data is scheduled for pickup at a later time. Thousands of CPU cycles pass before the function hits again at the 0 millisecond mark, the CPU fetches the instructions from the bus and executes them. The only problem is that song ('') was returned thousands of cycles prior.
+왜 이런 일이 발생했을까요? `setTimeout`은 비동기 작업을 처리하기 위해 JavaScript 엔진의 이벤트 큐(작업 대기열)에 콜백 함수를 등록합니다. 이때 타이머가 0ms로 설정되어 있더라도, 콜백 함수는 현재 실행 중인 코드가 모두 완료된 후에야 실행됩니다. 그 사이에 `getSong` 함수는 이미 빈 문자열을 반환해버렸기 때문에 우리가 원하는 결과를 얻을 수 없는 것입니다.
 
-The same situation arises in dealing with file systems and network requests. The main thread simply cannot be blocked for an indeterminate period of time-- therefore, we use callbacks to schedule the execution of code in time in a controlled manner.
+이러한 상황은 파일 시스템 작업이나 네트워크 요청과 같은 다른 비동기 작업에서도 동일하게 발생합니다. JavaScript는 싱글 스레드로 동작하기 때문에 이러한 시간이 걸리는 작업들을 기다리며 메인 스레드를 멈출 수 없습니다. 대신 콜백 함수를 사용해 비동기 작업이 완료된 후에 실행될 코드를 지정하는 방식으로 처리합니다.
 
-You will be able to perform almost all of your operations with the following 3 patterns:
+다음 3가지 패턴을 사용하여 대부분의 작업을 수행할 수 있습니다:
 
-1. **In series:** functions will be executed in a strict sequential order, this one is most similar to `for` loops.
+1. **순차적으로:** 함수는 엄격한 순차적 순서로 실행됩니다. 이는 `for` 루프와 가장 유사합니다.
 
 ```js
-// operations defined elsewhere and ready to execute
+// 다른 곳에서 정의되고 실행 준비가 된 작업
 const operations = [
   { func: function1, args: args1 },
   { func: function2, args: args2 },
@@ -157,15 +160,15 @@ const operations = [
 ];
 
 function executeFunctionWithArgs(operation, callback) {
-  // executes function
+  // 함수 실행
   const { args, func } = operation;
   func(args, callback);
 }
 
 function serialProcedure(operation) {
-  if (!operation) process.exit(0); // finished
+  if (!operation) process.exit(0); // 완료
   executeFunctionWithArgs(operation, function (result) {
-    // continue AFTER callback
+    // 콜백 후 계속
     serialProcedure(operations.shift());
   });
 }
@@ -173,7 +176,7 @@ function serialProcedure(operation) {
 serialProcedure(operations.shift());
 ```
 
-2. **Full parallel:** when ordering is not an issue, such as emailing a list of 1,000,000 email recipients.
+2. **전체 병렬:** 순서가 문제가 아닌 경우, 예를 들어 1,000,000명의 이메일 수신자에게 이메일을 보내는 경우.
 
 ```js
 let count = 0;
@@ -188,7 +191,7 @@ const recipients = [
 ];
 
 function dispatch(recipient, callback) {
-  // `sendEmail` is a hypothetical SMTP client
+  // `sendEmail`은 가상의 SMTP 클라이언트입니다
   sendMail(
     {
       subject: 'Dinner tonight',
@@ -227,7 +230,7 @@ recipients.forEach(function (recipient) {
 });
 ```
 
-3. **Limited parallel:** parallel with limit, such as successfully emailing 1,000,000 recipients from a list of 10 million users.
+3. **제한된 병렬:** 제한된 병렬, 예를 들어 1,000,000명의 수신자에게 성공적으로 이메일을 보내는 경우.
 
 ```js
 let successCount = 0;
@@ -238,7 +241,7 @@ function final() {
 }
 
 function dispatch(recipient, callback) {
-  // `sendEmail` is a hypothetical SMTP client
+  // `sendEmail`은 가상의 SMTP 클라이언트입니다
   sendMail(
     {
       subject: 'Dinner tonight',
@@ -268,4 +271,4 @@ function sendOneMillionEmailsOnly() {
 sendOneMillionEmailsOnly();
 ```
 
-Each has its own use cases, benefits, and issues you can experiment and read about in more detail. Most importantly, remember to modularize your operations and use callbacks! If you feel any doubt, treat everything as if it were middleware!
+각각은 자체 사용 사례, 이점, 그리고 더 자세히 실험하고 읽을 수 있는 문제가 있습니다. 가장 중요한 것은 작업을 모듈화하고 콜백을 사용하는 것입니다! 의심스러운 경우 모든 것을 미들웨어로 취급하세요!
