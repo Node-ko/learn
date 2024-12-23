@@ -5,8 +5,7 @@ authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, ovflowd
 ---
 
 > ❗️ _번역 날짜: 2024년 12월 17일_ <br />
-> 공식 문서 원문은 아래를 참고하세요.<br />
-> [The Node.js Event emitter](https://nodejs.org/en/learn/asynchronous-work/the-nodejs-event-emitter#the-nodejs-event-emitter)
+> 공식 문서 원문은 아래를 참고하세요.<br /> > [The Node.js Event emitter](https://nodejs.org/en/learn/asynchronous-work/the-nodejs-event-emitter#the-nodejs-event-emitter)
 
 # Node.js의 Event emitter
 
@@ -18,13 +17,13 @@ authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, ovflowd
 
 다음과 같이 초기화할 수 있습니다.
 
-```cjs
+```js
 const EventEmitter = require('node:events');
 
 const eventEmitter = new EventEmitter();
 ```
 
-```mjs
+```js
 import EventEmitter from 'node:events';
 
 const eventEmitter = new EventEmitter();
@@ -50,7 +49,6 @@ eventEmitter.emit('start');
 ```
 
 이벤트 핸들러 함수가 트리거되며 콘솔에 로그가 출력됩니다.
-the event handler function is triggered, and we get the console log.
 
 `emit()` 메서드에 추가적인 인자를 전달하여 이벤트 핸들러에 값을 넘길 수 있습니다.
 
