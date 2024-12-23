@@ -42,7 +42,7 @@
 - [Reading files with Node.js](docs/manipulating-files/reading-files-with-nodejs.md)
 - [Writing files with Node.js](docs/manipulating-files/writing-files-with-nodejs.md)
 - [Working with folders in Node.js](docs/manipulating-files/working-with-folders-in-nodejs.md)
-- [How to work with Different Filesystems](docs/manipulating-files/how-to-work-with-different-filesystems.md)
+- [How to work with Different Filesystems](docs/manipulating-files/working-with-different-filesystems.md)
 
 ## Command Line
 
