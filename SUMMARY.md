@@ -32,7 +32,7 @@
 - [Node.js의 Event emitter](docs/asynchronous-work/the-nodejs-event-emitter.md)
 - [process.nextTick() 이해하기](docs/asynchronous-work/understanding-process-nexttick.md)
 - [setImmediate() 이해하기](docs/asynchronous-work/understanding-setimmediate.md)
-- [Don't Block the Event Loop](docs/asynchronous-work/dont-block-the-event-loop.md)
+- [Event Loop를 차단하지 마세요](docs/asynchronous-work/dont-block-the-event-loop.md)
 
 ## Manipulating Files
 
