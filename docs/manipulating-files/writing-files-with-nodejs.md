@@ -5,6 +5,9 @@ authors: flaviocopes, MylesBorins, fhemberger, LaRuaNa, ahmadawais, clean99, ovf
 ---
 
 # Node.js로 파일 쓰기
+> ❗️ *번역 날짜: 2024년 12월 23일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Writing files with Node.js](https://nodejs.org/en/learn/manipulating-files/writing-files-with-nodejs)
 
 ## 파일 쓰기
 

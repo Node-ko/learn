@@ -40,8 +40,8 @@
 - [Node.js File Paths](docs/manipulating-files/nodejs-file-paths.md)
 - [Working with file descriptors in Node.js](docs/manipulating-files/working-with-file-descriptors-in-nodejs.md)
 - [Reading files with Node.js](docs/manipulating-files/reading-files-with-nodejs.md)
-- [Writing files with Node.js](docs/manipulating-files/writing-files-with-nodejs.md)
-- [Working with folders in Node.js](docs/manipulating-files/working-with-folders-in-nodejs.md)
+- [Node.js로 파일 쓰기](docs/manipulating-files/writing-files-with-nodejs.md)
+- [Node.js로 폴더 작업하기](docs/manipulating-files/working-with-folders-in-nodejs.md)
 - [How to work with Different Filesystems](docs/manipulating-files/how-to-work-with-different-filesystems.md)
 
 ## Command Line

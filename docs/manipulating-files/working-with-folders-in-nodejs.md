@@ -5,6 +5,9 @@ authors: flaviocopes, MylesBorins, fhemberger, liangpeili, LaRuaNa, ahmadawais, 
 ---
 
 # Node.js로 폴더 작업하기
+> ❗️ *번역 날짜: 2024년 12월 23일* <br>
+> 공식 문서 원문은 아래를 참고하세요.<br>
+>[Working with folders in Node.js](https://nodejs.org/en/learn/manipulating-files/working-with-folders-in-nodejs)
 
 Node.js `fs` 코어 모듈은 폴더를 작업하는 데 유용한 많은 메서드를 제공합니다.
 
